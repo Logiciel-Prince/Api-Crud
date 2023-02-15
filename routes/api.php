@@ -62,7 +62,7 @@ Route::Post('Getuser/{id}',[Usercontroller::class,'show']);
 Route::middleware('auth:api')->group(function () {
     //* <-----------------------This Route Delete the Active User ------------------------------>
 
-    Route::Delete('Delete',[Usercontroller::class,'destroy']);
+    Route::Delete('delete',[Usercontroller::class,'destroy']);
 
     //* <-----------------------This Route Provide The Information Of Login User------------------------------>
 

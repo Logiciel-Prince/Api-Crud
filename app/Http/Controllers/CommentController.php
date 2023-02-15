@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Post;
+use App\Transformers\CommentTransformer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class CommentController extends Controller
@@ -45,10 +45,11 @@ class CommentController extends Controller
 
     public function index()
     {
-        $data = Comment::with('user')->with('post')->get();
-        return response()->json([
-            'Data' => $data
-        ]);
+        $data = Comment::with('post')->get();
+        // return response()->json([
+        //     'Data' => $data
+        // ]);
+        return fractal($data,new CommentTransformer());
     }
 
     //-----------------------------This function create and post the comment on facebook posts---------------------------//
@@ -63,8 +64,9 @@ class CommentController extends Controller
             return response()->json([
                 'message' => $validate->errors(),
             ], 412);
-        } else {
-            $data = Comment::create([
+        }
+
+        $data = Comment::create([
                 'user_id' => auth()->user()->id,
                 'post_id' => $request->post_id,
                 'message' => $request->message
@@ -80,12 +82,11 @@ class CommentController extends Controller
                     'comment' => $data->orderBy('id', 'desc')->first(),
                     'status' => $response->json()
                 ]);
-            } else {
-                return response()->json([
+            } 
+
+            return response()->json([
                     'message' => 'Comment Posted Successful',
                     'comment' => $data->orderBy('id', 'desc')->first(),
                 ]);
             }
-        }
-    }
 }

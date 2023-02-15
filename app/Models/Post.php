@@ -16,7 +16,7 @@ class Post extends Model
         'desc',
         'image',
         'category_id',
-        'postfb_id'
+        'postfbid'
     ];
     public function category()
     {
@@ -24,9 +24,9 @@ class Post extends Model
         return $collect;
     }
 
-    public function comment()
+    public function comments()
     {
-        return $this->hasMany(Comment::class,'post_id');
+        return $this->hasMany(Comment::class);
     }
 
 }

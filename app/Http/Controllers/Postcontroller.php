@@ -53,7 +53,7 @@ class Postcontroller extends Controller
 //* <-----------------------This Route update Post from database------------------------------>
 
     Public Function updatepost(Request $request,$id)
-    {
+    {   
         $user = auth()->user()->id;
         $data = Post::where('user_id',$user)
                 ->find($id);
@@ -188,7 +188,7 @@ public function upload(Request $request){
                     'desc' => $request->desc,
                     'image' => $imageName,
                     'category_id' => $cat,
-                    'postfb_id' => $response->json()['id']
+                    'postfbid' => $response->json()['id']
                 ]);
             return response()->json([
                 'message' =>'Post Created Successfully',
@@ -247,7 +247,8 @@ public function upload(Request $request){
         }
         else{
             // $data = Post::where('user_id',auth()->user()->id)->with('comment')->get(['title','desc','image','category_id']);
-            $post = Post::where('user_id',auth()->user()->id)->with('comment')->with('category')->get();
+            $post = Post::where('user_id',auth()->user()->id)->with('comments')->with('category')->get();
+            // $post = Post::where('user_id',auth()->user()->id)->with('comments')->get();
             return fractal($post,new Posttransformer());
         }
         return response()->json([

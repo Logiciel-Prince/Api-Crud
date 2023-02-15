@@ -2,6 +2,7 @@
 
 namespace App\Transformers;
 
+use App\Http\Controllers\CommentController;
 use App\Models\Post;
 use League\Fractal\TransformerAbstract;
 
@@ -23,7 +24,7 @@ class Posttransformer extends TransformerAbstract
      */
     protected array $availableIncludes = [
         'category',
-        'comment',
+        'comments',
     ];
     
     /**
@@ -33,7 +34,9 @@ class Posttransformer extends TransformerAbstract
      */
     public function transform(Post $post)
     {
+        // dd($post);
         return [
+            'id' => $post->id,
             'title' => $post->title,
             'desc' => $post->desc,
             'Image' => $post->image,
@@ -42,19 +45,19 @@ class Posttransformer extends TransformerAbstract
 
     public function includeCategory(Post $post)
     {
-        if(!$post->category->isEmpty())
+        if(!empty($post->category->toArray()))
         {
-            $transformer =  Posttransformer::setDefaultIncludes(['category']);
-            return $this->collection($post->category, $transformer);
+            $transformer =  $post->category;
+            return $this->item($transformer, new CategoryTransformer);
         }
     }
 
-    public function includeComment(Post $post)
+    public function includeComments(Post $post)
     {
-        if(!$post->comment->isEmpty())
+        if(!$post->comments->isEmpty())
         {
-            $transformer =  Posttransformer::setDefaultIncludes(['comment']);
-            return $this->collection($post->comment, $transformer);
+            return $this->collection($post->comments, new CommentTransformer);
         }
+       
     }
 }

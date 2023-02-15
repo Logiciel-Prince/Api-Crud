@@ -4,16 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
-use App\Http\Resources\CategoryResource;
 use Illuminate\Support\Facades\Validator;
 use App\Transformers\CategoryTransformer;
 
 class CategoryController extends Controller
 {
-    //---------------------This function show the Categories In Hierarchical form--------------------------//
+    //--------------------This function show the Categories In Hierarchical form--------------------------//
     public function manageCategory()
     {
-        $categories = Category::where('parent_id', '=', 1)->with('children')->get();
+        $categories = Category::where('parent_id', '=', 1)
+            ->with('children')
+            ->get();
         // return CategoryResource::collection($categories);
        return fractal($categories,new CategoryTransformer());
     }
@@ -21,17 +22,18 @@ class CategoryController extends Controller
     //---------------------This function add The new Categories Inside root or other Categories--------------------------//
     public function addCategory(Request $request)
     {
-        $validate = Validator::make($request->all(), [
-            'title' => 'required',
+        $input = $request->all();
+        $validate = Validator::make($input, [
+            'title' => 'required|unique:categories',
         ]);
 
         if($validate->fails()){
-            return response()->json([
-                'message' =>$validate->errors(),
-            ],412);
+            return response()->json(
+                ['message' =>$validate->errors()],
+                412
+            );
         }
 
-        $input = $request->all();
         $input['parent_id'] = empty($input['parent_id']) ? 1 : $input['parent_id'];
 
         $data = Category::create($input);
