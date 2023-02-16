@@ -4,7 +4,8 @@ namespace App\Transformers;
 
 use App\Models\Comment;
 use League\Fractal\TransformerAbstract;
-use App\Transformers\Posttransformer;
+use App\Transformers\PostTransformer;
+use App\Transformers\UserTransformer;
 
 class CommentTransformer extends TransformerAbstract
 {
@@ -41,7 +42,7 @@ class CommentTransformer extends TransformerAbstract
 
     public function includePost(Comment $com){
         $transformer = $com->post;
-        return $this->item($transformer, new Posttransformer);
+        return $this->item($transformer, new PostTransformer);
     }
 
     public function includeUser(Comment $com){

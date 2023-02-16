@@ -2,11 +2,12 @@
 
 namespace App\Transformers;
 
-use App\Http\Controllers\CommentController;
 use App\Models\Post;
+use App\Transformers\CategoryTransformer;
+use App\Transformers\CommentTransformer;
 use League\Fractal\TransformerAbstract;
 
-class Posttransformer extends TransformerAbstract
+class PostTransformer extends TransformerAbstract
 {
     /**
      * List of resources to automatically include

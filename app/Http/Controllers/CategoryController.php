@@ -10,16 +10,18 @@ use App\Transformers\CategoryTransformer;
 class CategoryController extends Controller
 {
     //--------------------This function show the Categories In Hierarchical form--------------------------//
+
     public function manageCategory()
     {
         $categories = Category::where('parent_id', '=', 1)
             ->with('children')
             ->get();
-        // return CategoryResource::collection($categories);
+
        return fractal($categories,new CategoryTransformer());
     }
 
     //---------------------This function add The new Categories Inside root or other Categories--------------------------//
+    
     public function addCategory(Request $request)
     {
         $input = $request->all();
@@ -45,8 +47,12 @@ class CategoryController extends Controller
     }
 
     //---------------------This function delete The selected Category--------------------------//
-    Public Function deleteCategory($id){
-        $ob = Category::where('id',$id)->with('children')->get();
+
+    Public Function deleteCategory($id)
+    {
+        $ob = Category::where('id',$id)
+                ->with('children')
+                ->get();
         if(empty($ob[0]->children->toArray()))
         {
             Category::where('id',$id)->delete();
@@ -62,7 +68,9 @@ class CategoryController extends Controller
     }
 
     //---------------------This function update The existing Categories --------------------------//
-    Public Function updateCategory(Request $request,$id){
+
+    Public Function updateCategory(Request $request,$id)
+    {
         $ob = Category::where('id',$id);
         if(!empty($ob))
         {

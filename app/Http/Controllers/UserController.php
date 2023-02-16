@@ -5,12 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 use Laravel\Passport\Passport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class Usercontroller extends Controller
+class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -39,16 +38,15 @@ class Usercontroller extends Controller
             'facebook_id'
             ]
         );
-            foreach($result as $key => $value)
-            {
-                if(empty($result[$key]['facebook_id'])){
-                    $result[$key]['facebook_id'] = "InActive";
-                }
-                else{
-                    $result[$key]['facebook_id'] = "Active";
-                }
+        foreach($result as $key => $value)
+        {
+            if(empty($result[$key]['facebook_id'])){
+                $result[$key]['facebook_id'] = "InActive";
             }
-        // dd($result->facebook_id);
+            else{
+                $result[$key]['facebook_id'] = "Active";
+            }
+        }
         $lastpage =  ceil($total/$perpage);
         if($page > $lastpage)
         {
@@ -60,14 +58,12 @@ class Usercontroller extends Controller
                 'last_page' => $lastpage
             ],404);
         }
-        else{
-            return response()->json([
-                'Current_page' => $page,
-                'user' => $result,
-                'total' => $total,
-                'last_page' => $lastpage
-            ],200);
-        }
+        return response()->json([
+            'Current_page' => $page,
+            'user' => $result,
+            'total' => $total,
+            'last_page' => $lastpage
+        ],200);
     }
 
     /**
@@ -88,9 +84,9 @@ class Usercontroller extends Controller
             'name.min' => 'Name must have 5 char.',
         ]);
         if($validate->fails()){
-        return response()->json([
-            'message' =>$validate->errors(),
-        ],412);
+            return response()->json([
+                'message' =>$validate->errors(),
+            ],412);
         }
 
         $user = User::create([
@@ -117,11 +113,13 @@ class Usercontroller extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
+
         if($validate->fails()){
-        return response()->json([
-            'message' =>$validate->errors(),
-        ],412);
+            return response()->json([
+                'message' =>$validate->errors(),
+            ],412);
         }
+
         if(Auth::attempt($request->only('email','password')))
         {
             $user = auth()->user();
@@ -129,11 +127,9 @@ class Usercontroller extends Controller
             $success['name']=$user->name;
             return response()->json([$success],200);
         }
-        else{
-            return response()->json([
-                'message'=>'Check login credentials and try again'
-            ],401);
-        }
+        return response()->json([
+            'message'=>'Check login credentials and try again'
+        ],401);
     }
 
     /**
@@ -152,12 +148,9 @@ class Usercontroller extends Controller
                 'user' => $data
             ],200);
         }
-        else{
-
-            return response()->json([
-                'message' => 'User Not Found'
-            ],404);
-        }
+        return response()->json([
+            'message' => 'User Not Found'
+        ],404);
     }
 
     /**
@@ -166,7 +159,7 @@ class Usercontroller extends Controller
      * @return \Illuminate\Http\Response
      */
 //* <-----------------------This Route Provide The Information Of Login User------------------------------>
-    public function userinfo()
+    public function userInfo()
     {
         $id = auth()->user()->id;
         $data = User::where('id',$id)->get();
@@ -177,11 +170,9 @@ class Usercontroller extends Controller
                 'message' => 'Login User Credentials'
             ],200);
         }
-        else{
-            return response()->json([
-                'message' => 'User Not Found'
-            ],404);
-        }
+        return response()->json([
+            'message' => 'User Not Found'
+        ],404);
     }
     /**
      * Update the specified resource in storage.
@@ -202,11 +193,13 @@ class Usercontroller extends Controller
             'name.required' => 'Name is must.',
             'name.min' => 'Name must have 5 char.',
         ]);
+
         if($validate->fails()){
             return response()->json([
                 'message' =>$validate->errors(),
             ],412);
         }
+
         $id = auth()->user()->id;
         $data = User::where('id',$id);
         if(!empty($data))
@@ -216,25 +209,19 @@ class Usercontroller extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password)
             ];
-            // $data -> name = $request->name;
-            // $data -> email = $request->email;
-            // $data -> password = Hash::make($request->password);
             $data -> update($user);
             return response()->json([
                 'message'=>'User Upated Successful'
             ],200);
         }
-        else{
-            return response()->json([
-                'message'=>'User Not Found'
-            ],404);
-        }
+        return response()->json([
+            'message'=>'User Not Found'
+        ],404);
     }
 
     //* <-----------------------This Route Update The Existing User Name Email Passsword of Selected User ------------------------------>
     public function updateAdminUser(Request $request,$id)
     {
-
         $validate = Validator::make($request->all(), [
             'name' => 'required|min:5',
             'email' => 'required|unique:users|email',
@@ -250,6 +237,7 @@ class Usercontroller extends Controller
                 'message' =>$validate->errors(),
             ],412);
         }
+
         $data = User::find($id);
         if(!empty($data))
         {
@@ -258,28 +246,20 @@ class Usercontroller extends Controller
                     'message'=>'You Dont Have Permission To Update This User'
                 ],401);
             }
-            else{
-
-                $user = [
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'password' => Hash::make($request->password),
-                    'role' => $request->role
-                ];
-                // $data -> name = $request->name;
-                // $data -> email = $request->email;
-                // $data -> password = Hash::make($request->password);
-                $data -> update($user);
-                return response()->json([
-                    'message'=>'User Upated Successful'
-                ],200);
-            }
-        }
-        else{
+            $user = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role
+            ];
+            $data -> update($user);
             return response()->json([
-                'message'=>'User Not Found'
-            ],404);
+                'message'=>'User Upated Successful'
+            ],200);
         }
+        return response()->json([
+            'message'=>'User Not Found'
+        ],404);
     }
 
     /**
@@ -299,36 +279,32 @@ class Usercontroller extends Controller
                 'message'=>'User Deleted Successful'
             ],202);
         }
-        else{
-            return response()->json([
-                'message'=>'User Not Found'
-            ],404);
-        }
+        return response()->json([
+            'message'=>'User Not Found'
+        ],404);
     }
 
     //* <-----------------------This Route Delete the Selected User ------------------------------>
     public function destroyAdminUser($id)
     {
-        // $id = auth()->user()->id;
         $data = User::find($id);
-        if(!empty($data)){
+
+        if(!empty($data))
+        {
             if($data->role == 'SuperAdmin'){
                 return response()->json([
                     'message'=>'You Dont Have Permission To Delete This User'
                 ],401);
             }
-            else{
-                $data -> delete();
-                return response()->json([
-                    'message'=>'User Deleted Successful'
-                ],202);
-            }
-        }
-        else{
+            $data -> delete();
             return response()->json([
-                'message'=>'User Not Found'
-            ],404);
+                'message'=>'User Deleted Successful'
+            ],202);
+
         }
+        return response()->json([
+            'message'=>'User Not Found'
+        ],404);
     }
 
     //* <-----------------------This Route Logout the Current User ------------------------------>

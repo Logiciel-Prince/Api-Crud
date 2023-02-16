@@ -7,10 +7,9 @@ use App\Models\{Post,Category};
 use App\Transformers\Posttransformer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
-class Postcontroller extends Controller
+class PostController extends Controller
 {
     //-----------------------------This Constructor get the facebook page access token---------------------------//
 
@@ -26,37 +25,30 @@ class Postcontroller extends Controller
                 ]);
             }
             
-            else{
-                if(empty(auth()->user()->token))
-                {
-                    return $next($reques);
-                }
-                else{
-                    $request = Http::get('https://graph.facebook.com/v15.0/me/accounts?access_token='.auth()->user()->token);
-                    if(array_key_exists('error',$request->json()))
-                    {
-                        return response()->json([
-                            'message' => 'Invalid access_token or Your access_token may be expired',
-                        ],401);
-                    }
-                    else
-                    {
-                        $this->access_token = $request['data'][1]['access_token'];
-                    }
-                }
-                
+            if(empty(auth()->user()->token))
+            {
+                return $next($reques);
             }
+            $request = Http::get('https://graph.facebook.com/v15.0/me/accounts?access_token='.auth()->user()->token);
+            if(array_key_exists('error',$request->json()))
+            {
+                return response()->json([
+                    'message' => 'Invalid access_token or Your access_token may be expired',
+                ],401);
+            }
+            $this->access_token = $request['data'][1]['access_token'];
+             
             return $next($reques);
 
         });
     }
 //* <-----------------------This Route update Post from database------------------------------>
 
-    Public Function updatepost(Request $request,$id)
+    Public Function updatePost(Request $request,$id)
     {   
         $user = auth()->user()->id;
         $data = Post::where('user_id',$user)
-                ->find($id);
+                    ->find($id);
 
         if($data != null)
         {
@@ -66,45 +58,42 @@ class Postcontroller extends Controller
                     'desc' => 'required',
                     'image' => 'mimes:png,jpg',
                 ]);
-                if($validate->fails()){
-                    return response()->json([
-                        'message' =>$validate->errors(),
-                    ],412);
-                }
-                if($request->hasFile('image'))
-                 {
+            if($validate->fails()){
+                return response()->json([
+                    'message' =>$validate->errors(),
+                ],412);
+            }
+            if($request->hasFile('image'))
+            {
 
-                     unlink(public_path('storage/images/'.$data->image));
-                     $imageName = time().'.'.$request->image->extension();
-                     // dd($imageName);
-                     $request->image->storeAs('public/images/', $imageName);
-                     $post = [
-                         'title' => $request->title,
-                         'desc' => $request->desc,
-                         'image' => $imageName
-                        ];
-                        if(empty($data)){
-
-                        }
-                        else{
-                        $d=$data->update($post);
-                        return response()->json([
-                            'message'=>'Post Updated Successful'
-                        ],201);
-                    }
-
-                }
-                else{
-                    $post = [
-                        'title' => $request->title,
-                        'desc' => $request->desc,
-                    ];
+                unlink(public_path('storage/images/'.$data->image));
+                $imageName = time().'.'.$request->image->extension();
+                // dd($imageName);
+                $request->image->storeAs('public/images/', $imageName);
+                $post = [
+                    'title' => $request->title,
+                    'desc' => $request->desc,
+                    'image' => $imageName
+                ];
+                if(!empty($data)){
                     $d=$data->update($post);
                     return response()->json([
                         'message'=>'Post Updated Successful'
                     ],201);
+                }
+            }
+            else
+            {
+                $post = [
+                    'title' => $request->title,
+                    'desc' => $request->desc,
+                ];
+                $d=$data->update($post);
+                return response()->json([
+                    'message'=>'Post Updated Successful'
+                ],201);
+            }
         }
-    }
         else{
             return response()->json([
                 'message'=>'Post not Available in Your Account'
@@ -114,7 +103,8 @@ class Postcontroller extends Controller
     }
     //* <-----------------------This Route Search Post from database------------------------------>
 
-    Public Function search(Request $request){
+    Public Function search(Request $request)
+    {
         $validate = Validator::make($request->all(), [
             'title' => 'required',
         ]);
@@ -130,7 +120,8 @@ class Postcontroller extends Controller
         }
         else{
             $post = Post::where('user_id',$id)
-                    ->where('title','like','%'.$request->title.'%')->get(['title','desc','image']);
+                    ->where('title','like','%'.$request->title.'%')
+                    ->get(['id','title','desc','image']);
         }
 
         if($post != null)
@@ -140,12 +131,9 @@ class Postcontroller extends Controller
                 'post' => $post
             ],200);
         }
-        else{
-            return response()->json([
-                'message'=>'Post Not Found',
-            ],404);
-        }
-
+        return response()->json([
+            'message'=>'Post Not Found',
+        ],404);
 
     }
     //* <-----------------------This Route Upload the Post on database------------------------------>
@@ -170,9 +158,6 @@ public function upload(Request $request){
             'message' => 'Please Select available Category or create a new Category'
         ],404);
     }
-    else{
-        $cat = $category->id;
-    }
     
     if($request->hasFile('image'))
     {
@@ -187,7 +172,7 @@ public function upload(Request $request){
                     'title' => $request->title,
                     'desc' => $request->desc,
                     'image' => $imageName,
-                    'category_id' => $cat,
+                    'category_id' => $category->id,
                     'postfbid' => $response->json()['id']
                 ]);
             return response()->json([
@@ -196,59 +181,51 @@ public function upload(Request $request){
                 'response from facebook' => $response->json()
             ],201);
         }    
-        else{
-            $post = Post::create([
-                'user_id' => auth()->user()->id,
-                'title' => $request->title,
-                'desc' => $request->desc,
-                'image' => $imageName,
-                'category_id' => $cat,
-            ]);
-            return response()->json([
-                'message' =>'Post Created Successfully',
-                'user' => $post->orderBy('id','desc')->first(),
-                'response from facebook' => 'User Not Connected With Facebook'
-            ],201);
-        }
-            
-           
-    }
-    else{
         $post = Post::create([
             'user_id' => auth()->user()->id,
             'title' => $request->title,
             'desc' => $request->desc,
+            'image' => $imageName,
+            'category_id' => $category->id,
         ]);
-        if(!empty($this->access_token))
-        {
-            $response =  Http::post('https://graph.facebook.com/v15.0/me/feed?access_token='.$this->access_token.'&message='.$request->desc);
-            return response()->json([
-                'message' =>'Post Created Successfully',
-                'user' => $post->orderBy('id','desc')->first(),
-                'response from facebook' => $response->json()
-            ],201);
-        }   
-        else{
-            return response()->json([
-                'message' =>'Post Created Successfully',
-                'user' => $post->orderBy('id','desc')->first(),
-                'response from facebook' => 'User Not Connected With Facebook'
-            ],201);
-        } 
+        return response()->json([
+            'message' =>'Post Created Successfully',
+            'user' => $post->orderBy('id','desc')->first(),
+            'response from facebook' => 'User Not Connected With Facebook'
+        ],201);            
+           
+    }
+    $post = Post::create([
+        'user_id' => auth()->user()->id,
+        'title' => $request->title,
+        'desc' => $request->desc,
+    ]);
+    if(!empty($this->access_token))
+    {
+        $response =  Http::post('https://graph.facebook.com/v15.0/me/feed?access_token='.$this->access_token.'&message='.$request->desc);
+        return response()->json([
+            'message' =>'Post Created Successfully',
+            'user' => $post->orderBy('id','desc')->first(),
+            'response from facebook' => $response->json()
+        ],201);
     }   
+    return response()->json([
+        'message' =>'Post Created Successfully',
+        'user' => $post->orderBy('id','desc')->first(),
+        'response from facebook' => 'User Not Connected With Facebook'
+    ],201);  
 }
 
 //* <-----------------------This Route get all the Post of user from database------------------------------>
 
-    Public Function getupload(){
+    Public Function getUpload()
+    {
         if(auth()->user()->role == 'SuperAdmin')
         {
             $data =Post::get();
         }
         else{
-            // $data = Post::where('user_id',auth()->user()->id)->with('comment')->get(['title','desc','image','category_id']);
             $post = Post::where('user_id',auth()->user()->id)->with('comments')->with('category')->get();
-            // $post = Post::where('user_id',auth()->user()->id)->with('comments')->get();
             return fractal($post,new Posttransformer());
         }
         return response()->json([

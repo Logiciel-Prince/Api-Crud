@@ -3,8 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
-    Usercontroller,
-    Postcontroller,
+    UserController,
+    PostController,
     CategoryController,
     CommentController
 };
@@ -20,110 +20,106 @@ use App\Http\Controllers\{
 */
 
 
-Route::group(['middleware'=>['auth:api'],['user-access:Admin,SuperAdmin']],function () {
+Route::group(['middleware'=>['auth:api']],function () {
 
-    //* <-----------------------This Route get all the User Information That create account ------------------------------>
-    Route::Get('Getuser',[Usercontroller::class,'index']);
+    Route::group(['middleware' => ['user-access:Admin,SuperAdmin']],function () {
+        //* <-----------------------This Route get all the User Information That create account ------------------------------>
+        Route::Get('Getuser',[UserController::class,'index']);
+    
+        //* <-----------------------This Route Create New User ------------------------------>
+    
+        Route::Post('Create',[UserController::class,'create']);
+    
+        //* <-----------------------This Route Update The Existing User Name Email Passsword of Active User ------------------------------>
+    
+        Route::Post('update',[UserController::class,'update']);
 
-    //* <-----------------------This Route Create New User ------------------------------>
+    });
 
-    Route::Post('Create',[Usercontroller::class,'create']);
+    // Route::Get('Getuser',[UserController::class,'index']);
+    Route::group(['middleware'=>['user-access:SuperAdmin']],function () {
+    
+        //* <-----------------------This Route Update The Existing User Name Email Passsword of Selected User ------------------------------>
+    
+        Route::Post('update/{id}',[UserController::class,'updateAdminUser']);
+    
+        //* <-----------------------This Route Delete the Active User ------------------------------>
+    
+        Route::Delete('deleteuser/{id}',[UserController::class,'destroyAdminUser']);
+    });
 
-    //* <-----------------------This Route Update The Existing User Name Email Passsword of Active User ------------------------------>
-
-    Route::Post('update',[Usercontroller::class,'update']);
-
-
-});
-
-// Route::Get('Getuser',[Usercontroller::class,'index']);
-Route::group(['middleware'=>['auth:api'],['user-access:SuperAdmin']],function () {
-
-    //* <-----------------------This Route Update The Existing User Name Email Passsword of Selected User ------------------------------>
-
-    Route::Post('update/{id}',[Usercontroller::class,'updateAdminUser']);
-
+    Route::group(['prefix' => 'v1'], function()  
+    {  
+        //---------------------This Route show the Categories In Hierarchical form--------------------------//
+        
+        Route::get('category',[CategoryController::class,'manageCategory'])->name('category-tree-view');
+        
+        //---------------------This Route add The new Categories Inside root or other Categories--------------------------//
+        
+        Route::Post('category',[CategoryController::class,'addCategory']);
+        
+        //---------------------This Route delete The selected Category--------------------------//
+        
+        Route::Delete('category/{id}',[CategoryController::class,'deleteCategory']);
+        
+        //---------------------This Route update The existing Categories --------------------------//
+        
+        Route::put('category/{id}',[CategoryController::class,'updateCategory']);
+    
+    });
     //* <-----------------------This Route Delete the Active User ------------------------------>
+    
+    Route::Delete('delete',[UserController::class,'destroy']);
+    
+    //* <-----------------------This Route Provide The Information Of Login User------------------------------>
+    
+    Route::get('userinfo',[UserController::class,'userInfo']);
+    
+    //* <-----------------------This Route Logout the Active User  and Delete Their Api's------------------------------>
+    
+    Route::Delete('logout',[UserController::class,'logout']);
+    
+    //* <-----------------------This Route Upload the Image on database------------------------------>
+    
+    Route::Post('upload',[PostController::class,'upload']);
+    
+    //* <-----------------------This Route get all the Images of user from database------------------------------>
+    
+    Route::Get('upload',[PostController::class,'getUpload']);
+    
+    //* <-----------------------This Route Upload the Image on database------------------------------>
+    
+    Route::Post('upload/{id}',[PostController::class,'updatePost']);
+    
+     //* <-----------------------This Route Search the Image on database------------------------------>
+    
+     Route::Post('search',[PostController::class,'search']);
 
-    Route::Delete('DeleteUser/{id}',[Usercontroller::class,'destroyAdminUser']);
+
+     //-----------------------------This Route get all the comment ---------------------------//
+     
+     Route::get('comment',[CommentController::class,'index']);
+     
+     //-----------------------------This Route create and post the comment on facebook posts---------------------------//
+     
+     Route::post('comment',[CommentController::class,'create']);
 });
+
 
 //* <-----------------------This Route Login User and Provide them Api Key ------------------------------>
 
-Route::Post('login',[Usercontroller::class,'login']);
+Route::Post('login',[UserController::class,'login']);
 
 //* <-----------------------This Route Show Only Selected User ------------------------------>
 
-Route::Post('Getuser/{id}',[Usercontroller::class,'show']);
+Route::Post('getuser/{id}',[UserController::class,'show']);
 
 
 
-// Route::Get('Delete',[Usercontroller::class,'destroy']);
-Route::middleware('auth:api')->group(function () {
-    //* <-----------------------This Route Delete the Active User ------------------------------>
 
-    Route::Delete('delete',[Usercontroller::class,'destroy']);
 
-    //* <-----------------------This Route Provide The Information Of Login User------------------------------>
 
-    Route::get('userinfo',[Usercontroller::class,'userinfo']);
 
-    //* <-----------------------This Route Logout the Active User  and Delete Their Api's------------------------------>
-
-    Route::Delete('logout',[Usercontroller::class,'logout']);
-
-    //* <-----------------------This Route Upload the Image on database------------------------------>
-
-    Route::Post('upload',[Postcontroller::class,'upload']);
-
-    //* <-----------------------This Route get all the Images of user from database------------------------------>
-
-    Route::Get('upload',[Postcontroller::class,'getupload']);
-
-    //* <-----------------------This Route Upload the Image on database------------------------------>
-
-    Route::Post('upload/{id}',[Postcontroller::class,'updatepost']);
-
-     //* <-----------------------This Route Search the Image on database------------------------------>
-
-     Route::Post('search',[Postcontroller::class,'search']);
-
-    //  Route::controller(Usercontroller::class)->group(function(){
-
-    //  });
-});
-
-Route::group(['prefix' => 'v1','middleware'=>'auth:api'], function()  
-{  
-    //---------------------This Route show the Categories In Hierarchical form--------------------------//
-    
-    Route::get('category',[CategoryController::class,'manageCategory'])->name('category-tree-view');
-    
-    //---------------------This Route add The new Categories Inside root or other Categories--------------------------//
-    
-    Route::Post('category',[CategoryController::class,'addCategory']);
-    
-    //---------------------This Route delete The selected Category--------------------------//
-    
-    Route::Delete('category/{id}',[CategoryController::class,'deleteCategory']);
-    
-    //---------------------This Route update The existing Categories --------------------------//
-    
-    Route::put('category/{id}',[CategoryController::class,'updateCategory']);
-
-});
-
-Route::middleware('auth:api')->group(function () {
-
-    //-----------------------------This Route get all the comment ---------------------------//
-
-    Route::get('comment',[CommentController::class,'index']);
-
-    //-----------------------------This Route create and post the comment on facebook posts---------------------------//
-
-    Route::post('comment',[CommentController::class,'create']);
-
-});
 
 
 
