@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     Controller,
-    CategoryController
 };
 
 /*
@@ -23,14 +22,11 @@ Route::get('/', function () {
 
 Route::Post('Create',[Usercontroller::class,'Create']);
 
-// Route::view('/','welcome')->name('login');
-
 Route::get('loginfb',[Controller::class,'login_to_facebook']);
 
 Route::get('auth/facebook',[Controller::class,'redirectToFacebook'])->name('auth.facebook');
 
 Route::get('auth/facebook/callback',[Controller::class, 'handleFacebookCallback']);
 
-Route::get('get/callback',[Controller::class, 'getData']);
 
 

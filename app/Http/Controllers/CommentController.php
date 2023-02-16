@@ -28,7 +28,7 @@ class CommentController extends Controller
             if (empty(auth()->user()->token)) {
                 return $next($reques);
             }
-            $request = Http::get('https://graph.facebook.com/v15.0/me/accounts?access_token=' . auth()->user()->token);
+            $request = Http::get('https://graph.facebook.com/v16.0/me/accounts?access_token=' . auth()->user()->token);
             if (array_key_exists('error', $request->json())) {
                 return response()->json([
                     'message' => 'Invalid access_token or Your access_token may be expired',
@@ -56,6 +56,7 @@ class CommentController extends Controller
             'post_id' => 'required',
             'message' => 'required',
         ]);
+        
         if ($validate->fails()) {
             return response()->json([
                 'message' => $validate->errors(),
@@ -69,11 +70,11 @@ class CommentController extends Controller
             ]);
         if (!empty($this->access_token)) {
             $post = Post::where('id', $request->post_id)->get();
-            $post_id = $post[0]['postfb_id'];
-            $response =  Http::get('https://graph.facebook.com/v16.0/' . $post_id . '?access_token=' . $this->access_token);
-            $postid = Post::where('postfb_id', $response->json()['id'])->first();
-            $response =  Http::post('https://graph.facebook.com/v16.0/' . $postid->toArray()['postfb_id'] . '/comments?message=' . $request->message . '&access_token=' . $this->access_token);
-            return response()->json([
+            $post_id = $post[0]['postfbid'];
+            $response =  Http::get(env('GRAPH_API_URL').$post_id.'?access_token='.$this->access_token);
+            $postid = Post::where('postfbid', $response->json()['id'])->first();
+            $response =  Http::post(env('GRAPH_API_URL') . $postid->toArray()['postfbid'] . '/comments?message=' . $request->message . '&access_token=' . $this->access_token);
+             return response()->json([
                 'message' => 'Comment Posted Successful',
                 'comment' => $data
                             ->orderBy('id', 'desc')

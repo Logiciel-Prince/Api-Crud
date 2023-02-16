@@ -2,46 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FacebookPostEvent;
 use Illuminate\Http\Request;
 use App\Models\{Post,Category};
-use App\Transformers\Posttransformer;
+use App\Transformers\PostTransformer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
-    //-----------------------------This Constructor get the facebook page access token---------------------------//
-
-    Public $access_token;
-
-    Public Function __construct(){
-
-        $this->middleware(function ($reques, $next) {
-            if(!Auth::check()) 
-            {
-                return response()->json([
-                    'message' => 'Please Login first '
-                ]);
-            }
-            
-            if(empty(auth()->user()->token))
-            {
-                return $next($reques);
-            }
-            $request = Http::get('https://graph.facebook.com/v15.0/me/accounts?access_token='.auth()->user()->token);
-            if(array_key_exists('error',$request->json()))
-            {
-                return response()->json([
-                    'message' => 'Invalid access_token or Your access_token may be expired',
-                ],401);
-            }
-            $this->access_token = $request['data'][1]['access_token'];
-             
-            return $next($reques);
-
-        });
-    }
+       
 //* <-----------------------This Route update Post from database------------------------------>
 
     Public Function updatePost(Request $request,$id)
@@ -164,23 +135,6 @@ public function upload(Request $request){
         $imageName = time().'.'.$request->image->extension();
         $request->image->storeAs('public/images/', $imageName);
         
-        if(!empty($this->access_token))
-        {
-            $response = Http::attach('attachment',file_get_contents($request->image),$imageName)->post('https://graph.facebook.com/v15.0/me/photos?access_token='.$this->access_token.'&message='.$request->desc);
-            $post = Post::create([
-                    'user_id' => auth()->user()->id,
-                    'title' => $request->title,
-                    'desc' => $request->desc,
-                    'image' => $imageName,
-                    'category_id' => $category->id,
-                    'postfbid' => $response->json()['id']
-                ]);
-            return response()->json([
-                'message' =>'Post Created Successfully',
-                'user' => $post->orderBy('id','desc')->first(),
-                'response from facebook' => $response->json()
-            ],201);
-        }    
         $post = Post::create([
             'user_id' => auth()->user()->id,
             'title' => $request->title,
@@ -188,9 +142,18 @@ public function upload(Request $request){
             'image' => $imageName,
             'category_id' => $category->id,
         ]);
+        if(!empty(auth()->user()->token))
+        {
+            $response  = event (new FacebookPostEvent([$request->all(),$imageName]));
+            return response()->json([
+                'message' => 'Image Posted Successful',
+                'Post' => $post->orderBy('id', 'desc')->first(),
+                'Response From Facebook' => $response
+            ],201);
+        }
         return response()->json([
             'message' =>'Post Created Successfully',
-            'user' => $post->orderBy('id','desc')->first(),
+            'Post' => $post->orderBy('id','desc')->first(),
             'response from facebook' => 'User Not Connected With Facebook'
         ],201);            
            
@@ -200,18 +163,18 @@ public function upload(Request $request){
         'title' => $request->title,
         'desc' => $request->desc,
     ]);
-    if(!empty($this->access_token))
+    if(!empty(auth()->user()->token))
     {
-        $response =  Http::post('https://graph.facebook.com/v15.0/me/feed?access_token='.$this->access_token.'&message='.$request->desc);
+        $response = event(new FacebookPostEvent($request->all()));
         return response()->json([
-            'message' =>'Post Created Successfully',
-            'user' => $post->orderBy('id','desc')->first(),
-            'response from facebook' => $response->json()
-        ],201);
-    }   
+            'message' => 'Image Posted Successful',
+            'Post' => $post->orderBy('id', 'desc')->first(),
+            'Response From Facebook' => $response
+        ],200);
+    }
     return response()->json([
         'message' =>'Post Created Successfully',
-        'user' => $post->orderBy('id','desc')->first(),
+        'Post' => $post->orderBy('id','desc')->first(),
         'response from facebook' => 'User Not Connected With Facebook'
     ],201);  
 }
@@ -226,7 +189,7 @@ public function upload(Request $request){
         }
         else{
             $post = Post::where('user_id',auth()->user()->id)->with('comments')->with('category')->get();
-            return fractal($post,new Posttransformer());
+            return fractal($post,new PostTransformer());
         }
         return response()->json([
             'message' =>'Success',
