@@ -134,7 +134,9 @@ public function upload(Request $request){
     {
         $imageName = time().'.'.$request->image->extension();
         $request->image->storeAs('public/images/', $imageName);
-        
+        // Storage::put($imageName,$request->image);
+        // dd(Storage::get($imageName));
+
         $post = Post::create([
             'user_id' => auth()->user()->id,
             'title' => $request->title,
