@@ -7,7 +7,9 @@ use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use App\Events\FacebookPostEvent;
+use App\Events\FacebookCommentEvent;
 use App\Listeners\FacebookPostListener;
+use App\Listeners\FacebookCommentListener;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         FacebookPostEvent::class => [
             FacebookPostListener::class
+        ],
+        FacebookCommentEvent::class => [
+            FacebookCommentListener::class
         ]
 
     ];

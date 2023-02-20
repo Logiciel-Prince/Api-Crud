@@ -134,9 +134,6 @@ public function upload(Request $request){
     {
         $imageName = time().'.'.$request->image->extension();
         $request->image->storeAs('public/images/', $imageName);
-        // Storage::put($imageName,$request->image);
-        // dd(Storage::get($imageName));
-
         $post = Post::create([
             'user_id' => auth()->user()->id,
             'title' => $request->title,
@@ -146,7 +143,7 @@ public function upload(Request $request){
         ]);
         if(!empty(auth()->user()->token))
         {
-            $response  = event (new FacebookPostEvent([$request->all(),$imageName]));
+            $response  = event (new FacebookPostEvent(['data' => $request->only(['title','desc','category','pagename']),'imageName' => $imageName]));
             return response()->json([
                 'message' => 'Image Posted Successful',
                 'Post' => $post->orderBy('id', 'desc')->first(),

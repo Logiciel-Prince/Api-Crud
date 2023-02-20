@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
-class FacebookPost implements ShouldQueue
+class FacebookComment implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -20,7 +20,6 @@ class FacebookPost implements ShouldQueue
     Public $data;
 
     public $tries = 2;
-
     /**
      * Create a new job instance.
      *
@@ -66,18 +65,9 @@ class FacebookPost implements ShouldQueue
     public function handle()
     {
         $event = $this->data;
-        if(array_key_exists('data',$event->data))
-        {
-            $imageName = $event->data['imageName'];
-            $image = public_path('storage/images/'.$imageName);
-            $response = Http::attach('attachment',file_get_contents($image),$imageName)->post(env('GRAPH_API_URL').'me/photos?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
-            Post::where('image',$imageName)
-                    ->update(['postfbid' => $response->json('id')]);
-            return $response;
-        }
-        else{
-            $response =  Http::post(env('GRAPH_API_URL').'me/feed?access_token='.$this->access_token.'&message='.$event->data['desc']);
-            return $response;
-        }
+        $message = $event->data['data']['message'];
+        $postid = Post::where('id',$event->data['data']['post_id'])->first('postfbid');
+        $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' . $message . '&access_token=' . $this->access_token);
+        return $response;
     }
 }
