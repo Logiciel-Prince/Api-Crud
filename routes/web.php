@@ -28,5 +28,6 @@ Route::get('auth/facebook',[Controller::class,'redirectToFacebook'])->name('auth
 
 Route::get('auth/facebook/callback',[Controller::class, 'handleFacebookCallback']);
 
+Route::get('postcallback',[Controller::class,'faceBookPost']);
 
 

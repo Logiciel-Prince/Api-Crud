@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\testmail;
+use App\Models\Post;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -9,9 +11,11 @@ use Illuminate\Routing\Controller as BaseController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class Controller extends BaseController
 {
@@ -61,6 +65,15 @@ class Controller extends BaseController
         } catch (Exception $e) {
             dd($e->getMessage());
         }
+    }
+
+    Public Function faceBookPost(Request $request){
+        Post::where('id',40)
+                ->update([
+                    'postfbid' => 5000
+                ]);
+                $req = $request->all();
+        Mail::to('prince@gmail.com')->send(new testmail($req));
     }
 
 }

@@ -214,6 +214,7 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
         'Socialite' => Laravel\Socialite\Facades\Socialite::class,
         'DataTables' => Yajra\DataTables\Facades\DataTables::class,
+        'Route'     => "Illuminate\Support\Facades\Route",
     ],
 
     // 'aliases' => Facade::defaultAliases()->merge([
