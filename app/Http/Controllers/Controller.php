@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class Controller extends BaseController
@@ -68,12 +69,28 @@ class Controller extends BaseController
     }
 
     Public Function faceBookPost(Request $request){
-        Post::where('id',40)
-                ->update([
-                    'postfbid' => 5000
-                ]);
-                $req = $request->all();
-        Mail::to('prince@gmail.com')->send(new testmail($req));
+        $data = Post::where('postfbid',$request->id)->first();
+        if(empty($data))
+        {
+            $url = $request->full_picture;
+            $rep = file_get_contents($url);
+            $imageName = time().'.jpg';
+            $new = 'storage/images/'.$imageName;
+            $upload =file_put_contents($new, $rep);
+            if(array_key_exists('description',$request->toArray())){
+            }
+            else{
+                $request['description'] = 'No Description';
+            }
+            Post::create([
+                'user_id' => 2,
+                'category_id' => 17,
+                'postfbid' => $request->id,
+                'title' => 'facebook',
+                'desc' => $request->description,
+                'image' => $imageName
+            ]);
+        }
     }
 
 }

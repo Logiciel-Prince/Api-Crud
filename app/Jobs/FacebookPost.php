@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FacebookPost implements ShouldQueue
 {
@@ -66,18 +67,18 @@ class FacebookPost implements ShouldQueue
     public function handle()
     {
         $event = $this->data;
-        if(array_key_exists('data',$event->data))
+        if(array_key_exists('imageName',$event->data['data']))
         {
             $imageName = $event->data['imageName'];
             $image = public_path('storage/images/'.$imageName);
             $response = Http::attach('attachment',file_get_contents($image),$imageName)->post(env('GRAPH_API_URL').'me/photos?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
             Post::where('image',$imageName)
-                    ->update(['postfbid' => $response->json('id')]);
+                    ->update(['postfbid' => $response->json('post_id')]);
             return $response;
         }
-        else{
-            $response =  Http::post(env('GRAPH_API_URL').'me/feed?access_token='.$this->access_token.'&message='.$event->data['desc']);
-            return $response;
-        }
+        $response =  Http::post(env('GRAPH_API_URL').'me/feed?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
+        Post::where('title',$event->data['data']['title'])
+             ->update(['postfbid' => $response->json('id')]);
+        return $response;
     }
 }

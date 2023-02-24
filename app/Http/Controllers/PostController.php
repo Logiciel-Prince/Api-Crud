@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\{Post,Category};
 use App\Transformers\PostTransformer;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
@@ -20,10 +18,8 @@ class PostController extends Controller
         $user = auth()->user()->id;
         $data = Post::where('user_id',$user)
                     ->find($id);
-
         if($data != null)
         {
-
             $validate = Validator::make($request->all(), [
                     'title' => 'required|unique:posts|min:3',
                     'desc' => 'required',
@@ -36,18 +32,17 @@ class PostController extends Controller
             }
             if($request->hasFile('image'))
             {
-
                 unlink(public_path('storage/images/'.$data->image));
                 $imageName = time().'.'.$request->image->extension();
-                // dd($imageName);
                 $request->image->storeAs('public/images/', $imageName);
                 $post = [
                     'title' => $request->title,
                     'desc' => $request->desc,
-                    'image' => $imageName
+                    'image' => $imageName,
                 ];
-                if(!empty($data)){
-                    $d=$data->update($post);
+                $d=$data->update($post);
+                dd($d);
+                if(!empty($d)){
                     return response()->json([
                         'message'=>'Post Updated Successful'
                     ],201);
@@ -161,10 +156,11 @@ public function upload(Request $request){
         'user_id' => auth()->user()->id,
         'title' => $request->title,
         'desc' => $request->desc,
+        'category_id' => $category->id,
     ]);
     if(!empty(auth()->user()->token))
     {
-        $response = event(new FacebookPostEvent($request->all()));
+        $response = event(new FacebookPostEvent(['data'=>$request->all()]));
         return response()->json([
             'message' => 'Image Posted Successful',
             'Post' => $post->orderBy('id', 'desc')->first(),

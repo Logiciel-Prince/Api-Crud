@@ -19,7 +19,7 @@ return new class extends Migration
                 ->constrained('users');
             $table->foreignId('category_id')
             ->constrained('categories');
-            $table->string('title')->unique();
+            $table->string('title');
             $table->string('desc');
             $table->string('image')->nullable();
             $table->timestamps();
