@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\FacebookPostEvent;
+use App\Events\FacebookUpdatePostEvent;
 use Illuminate\Http\Request;
 use App\Models\{Post,Category};
 use App\Transformers\PostTransformer;
@@ -21,7 +22,7 @@ class PostController extends Controller
         if($data != null)
         {
             $validate = Validator::make($request->all(), [
-                    'title' => 'required|unique:posts|min:3',
+                    'title' => 'required|min:3',
                     'desc' => 'required',
                     'image' => 'mimes:png,jpg',
                 ]);
@@ -32,16 +33,28 @@ class PostController extends Controller
             }
             if($request->hasFile('image'))
             {
-                unlink(public_path('storage/images/'.$data->image));
                 $imageName = time().'.'.$request->image->extension();
+                event(new FacebookUpdatePostEvent([
+                    'data'=>$data->toArray(),
+                    'message' => $request->all(),
+                    'imagename' => $imageName,
+                ])
+            );
+            dd('wait');
+                unlink(public_path('storage/images/'.$data->image));
                 $request->image->storeAs('public/images/', $imageName);
+                event(new FacebookUpdatePostEvent([
+                        'data'=>$data->toArray(),
+                        'message' => $request->all(),
+                        'imagename' => $imageName,
+                    ])
+                );
                 $post = [
                     'title' => $request->title,
                     'desc' => $request->desc,
                     'image' => $imageName,
                 ];
                 $d=$data->update($post);
-                dd($d);
                 if(!empty($d)){
                     return response()->json([
                         'message'=>'Post Updated Successful'
@@ -54,6 +67,14 @@ class PostController extends Controller
                     'title' => $request->title,
                     'desc' => $request->desc,
                 ];
+                if(!empty(auth()->user()->token))
+                {
+                    $response = event(new FacebookUpdatePostEvent([
+                            'data'=>$data->toArray(),
+                            'message' => $request->all(),   
+                        ])
+                    );
+                }
                 $d=$data->update($post);
                 return response()->json([
                     'message'=>'Post Updated Successful'

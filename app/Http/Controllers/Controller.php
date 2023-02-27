@@ -68,7 +68,7 @@ class Controller extends BaseController
         }
     }
 
-    Public Function faceBookPost(Request $request){
+    Public Function faceBookPost(Request $request){  
         $data = Post::where('postfbid',$request->id)->first();
         if(empty($data))
         {
@@ -83,7 +83,7 @@ class Controller extends BaseController
                 $request['description'] = 'No Description';
             }
             Post::create([
-                'user_id' => 2,
+                'user_id' => auth()->user()->id,
                 'category_id' => 17,
                 'postfbid' => $request->id,
                 'title' => 'facebook',

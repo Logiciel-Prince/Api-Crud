@@ -10,7 +10,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class FacebookPost implements ShouldQueue
 {
@@ -48,7 +47,10 @@ class FacebookPost implements ShouldQueue
                 'message' => 'Invalid access_token or Your access_token may be expired',
             ],401);
         }
-        $pageName = $this->data->data['data']['pagename'];
+        if(array_key_exists('pagename',$this->data->data['data']))
+        {
+            $pageName = $this->data->data['data']['pagename'];
+        }
         $name = empty($pageName) ? 'Api test' : $pageName;
         foreach($request['data'] as $d)
         {
@@ -67,7 +69,7 @@ class FacebookPost implements ShouldQueue
     public function handle()
     {
         $event = $this->data;
-        if(array_key_exists('imageName',$event->data['data']))
+        if(array_key_exists('imageName',$event->data))
         {
             $imageName = $event->data['imageName'];
             $image = public_path('storage/images/'.$imageName);
