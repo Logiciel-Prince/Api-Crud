@@ -20,6 +20,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('fb', function () {
+    return view('facebook');
+});
+
 Route::Post('Create',[Usercontroller::class,'Create']);
 
 Route::get('loginfb',[Controller::class,'login_to_facebook']);

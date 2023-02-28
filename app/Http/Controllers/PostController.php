@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FacebookDeletePostEvent;
 use App\Events\FacebookPostEvent;
 use App\Events\FacebookUpdatePostEvent;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class PostController extends Controller
        
 //* <-----------------------This Route update Post from database------------------------------>
 
-    Public Function updatePost(Request $request,$id)
+    public function updatePost(Request $request,$id)
     {   
         $user = auth()->user()->id;
         $data = Post::where('user_id',$user)
@@ -34,19 +35,12 @@ class PostController extends Controller
             if($request->hasFile('image'))
             {
                 $imageName = time().'.'.$request->image->extension();
-                event(new FacebookUpdatePostEvent([
-                    'data'=>$data->toArray(),
-                    'message' => $request->all(),
-                    'imagename' => $imageName,
-                ])
-            );
-            dd('wait');
-                unlink(public_path('storage/images/'.$data->image));
                 $request->image->storeAs('public/images/', $imageName);
+                unlink(public_path('storage/images/'.$data->image));
                 event(new FacebookUpdatePostEvent([
                         'data'=>$data->toArray(),
-                        'message' => $request->all(),
-                        'imagename' => $imageName,
+                        'message' => $request->only('title','desc'),
+                        'imageName' => $imageName,
                     ])
                 );
                 $post = [
@@ -90,7 +84,7 @@ class PostController extends Controller
     }
     //* <-----------------------This Route Search Post from database------------------------------>
 
-    Public Function search(Request $request)
+    public function search(Request $request)
     {
         $validate = Validator::make($request->all(), [
             'title' => 'required',
@@ -197,7 +191,7 @@ public function upload(Request $request){
 
 //* <-----------------------This Route get all the Post of user from database------------------------------>
 
-    Public Function getUpload()
+    public function getUpload()
     {
         if(auth()->user()->role == 'SuperAdmin')
         {
@@ -212,5 +206,29 @@ public function upload(Request $request){
             'user' => $data
         ],200);
 
+    }
+
+//* <-----------------------This Route delete the selected Post of user from database------------------------------>
+
+    public function deletePost($id){
+        $data = Post::where('user_id',auth()->user()->id)
+                ->find($id);
+        if($data != null)
+        {
+            if($data->image != null)
+            {
+                event(new FacebookDeletePostEvent(['data'=>$data]));
+                unlink(public_path('storage/images/'.$data->image));
+            }
+            $data -> delete();
+            return response()->json([
+                'message'=>'Post Deleted Successful in Your Account'
+            ],404);
+        }
+        else{
+            return response()->json([
+                'message'=>'Post not Available in Your Account'
+            ],404);
+        }
     }
 }

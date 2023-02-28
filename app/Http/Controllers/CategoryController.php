@@ -48,7 +48,7 @@ class CategoryController extends Controller
 
     //---------------------This function delete The selected Category--------------------------//
 
-    Public Function deleteCategory($id)
+    public function deleteCategory($id)
     {
         $ob = Category::where('id',$id)
                 ->with('children')
@@ -69,7 +69,7 @@ class CategoryController extends Controller
 
     //---------------------This function update The existing Categories --------------------------//
 
-    Public Function updateCategory(Request $request,$id)
+    public function updateCategory(Request $request,$id)
     {
         $ob = Category::where('id',$id);
         if(!empty($ob))

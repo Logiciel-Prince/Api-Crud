@@ -23,7 +23,7 @@ class Controller extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
 
-    Public Function login_to_facebook(){
+    public function login_to_facebook(){
         return Http::get('http://localhost/Prince/OJT/Api%20Crud/public/auth/facebook?scope=public_profile,email,user_birthday,user_friends,user_posts,user_likes,pages_manage_posts,user_photos,publish_videos,pages_manage_cta,pages_shows_list,pages_messaging,publish_to_groups,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement');
     }
 
@@ -68,13 +68,15 @@ class Controller extends BaseController
         }
     }
 
-    Public Function faceBookPost(Request $request){  
+    public function faceBookPost(Request $request){  
         $data = Post::where('postfbid',$request->id)->first();
         if(empty($data))
         {
             $url = $request->full_picture;
             $rep = file_get_contents($url);
-            $imageName = time().'.jpg';
+            $extension = explode('?',$url);
+            $ext = explode('.',$extension[0]);
+            $imageName = time().'.'.$ext[5];
             $new = 'storage/images/'.$imageName;
             $upload =file_put_contents($new, $rep);
             if(array_key_exists('description',$request->toArray())){

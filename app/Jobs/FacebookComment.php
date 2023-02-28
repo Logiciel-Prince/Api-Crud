@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Comment;
 use App\Models\Post;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -71,6 +72,9 @@ class FacebookComment implements ShouldQueue
         $message = $event->data['data']['message'];
         $postid = Post::where('id',$event->data['data']['post_id'])->first('postfbid');
         $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' . $message . '&access_token=' . $this->access_token);
+        Comment::where('id',$event->data['message']['id'])->update([
+            'commentfbid' => $response->json('id'),
+        ]);
         return $response;
     }
 }

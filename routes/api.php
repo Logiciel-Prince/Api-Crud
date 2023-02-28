@@ -86,6 +86,10 @@ Route::group(['middleware'=>['auth:api']],function () {
     //* <-----------------------This Route get all the Images of user from database------------------------------>
     
     Route::Get('upload',[PostController::class,'getUpload']);
+
+    //* <-----------------------This Route delete the Image on database------------------------------>
+    
+    Route::Delete('upload/{id}',[PostController::class,'deletePost']);
     
     //* <-----------------------This Route Upload the Image on database------------------------------>
     
@@ -103,6 +107,14 @@ Route::group(['middleware'=>['auth:api']],function () {
      //-----------------------------This Route create and post the comment on facebook posts---------------------------//
      
      Route::post('comment',[CommentController::class,'create']);
+
+     //-----------------------------This Route Update and post the comment on facebook posts---------------------------//
+     
+     Route::post('comment/{id}',[CommentController::class,'update']);
+
+     //-----------------------------This Route delete the comments on facebook posts---------------------------//
+     
+     Route::delete('comment/{id}',[CommentController::class,'destroy']);
 });
 
 

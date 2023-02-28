@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\Post;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,9 +10,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
-class UpdatePostJob implements ShouldQueue
+class DeleteCommentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -30,6 +28,7 @@ class UpdatePostJob implements ShouldQueue
     public function __construct($data)
     {
         $this->data = $data;
+
         if(!Auth::check()) 
         {
             return response()->json([
@@ -47,9 +46,9 @@ class UpdatePostJob implements ShouldQueue
                 'message' => 'Invalid access_token or Your access_token may be expired',
             ],401);
         }
-        if(array_key_exists('pagename',$this->data->data['message']))
+        if(array_key_exists('pagename',$this->data->data['data']->toArray()))
         {
-            $pageName = $this->data->data['message']['pagename'];
+            $pageName = $this->data->data['data']['pagename'];
         }
         $name = empty($pageName) ? 'Api test' : $pageName;
         foreach($request['data'] as $d)
@@ -69,20 +68,7 @@ class UpdatePostJob implements ShouldQueue
     public function handle()
     {
         $event = $this->data;
-        if($event->data['data']['image'] != null)
-        {
-            $imageName = $event->data['imageName'];
-            $response =  Http::delete(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$this->access_token);
-            Log::info($response);
-            $image = public_path('storage/images/'.$imageName);
-            $response = Http::attach('attachment',file_get_contents($image),$imageName)->post(env('GRAPH_API_URL').'me/photos?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
-            Log::info($response);
-            Post::where('id',$event->data['data']['id'])
-                    ->update(['postfbid' => $response->json('post_id')]);
-            return $response;
-        }
-        $response =  Http::post(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$this->access_token.'&message='.$event->data['message']['desc']);
-        Log::info($response);
+        $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$this->access_token);
         return $response;
     }
 }

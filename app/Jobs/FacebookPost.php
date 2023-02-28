@@ -33,7 +33,7 @@ class FacebookPost implements ShouldQueue
         if(!Auth::check()) 
         {
             return response()->json([
-                'message' => 'Please Login first '
+                'message' => 'Please Login first'
             ]);
         }
         

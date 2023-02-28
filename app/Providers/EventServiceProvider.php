@@ -6,12 +6,22 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
-use App\Events\FacebookPostEvent;
-use App\Events\FacebookUpdatePostEvent;
-use App\Events\FacebookCommentEvent;
-use App\Listeners\FacebookPostListener;
-use App\Listeners\FacebookUpdatePostListener;
-use App\Listeners\FacebookCommentListener;
+use App\Events\{
+    FacebookPostEvent,
+    FacebookUpdatePostEvent,
+    FacebookDeletePostEvent,
+    FacebookCommentEvent,
+    FacebookUpdateCommentEvent,
+    FacebookDeleteCommentEvent
+};
+use App\Listeners\{
+    FacebookPostListener,
+    FacebookUpdatePostListener,
+    FacebookDeletePostListener,
+    FacebookCommentListener,
+    FacebookUpdateCommentListener,
+    FacebookDeleteCommentListener
+};
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -27,11 +37,20 @@ class EventServiceProvider extends ServiceProvider
         FacebookPostEvent::class => [
             FacebookPostListener::class
         ],
+        FacebookUpdatePostEvent::class => [
+            FacebookUpdatePostListener::class
+        ],
+        FacebookDeletePostEvent::class => [
+            FacebookDeletePostListener::class
+        ],
         FacebookCommentEvent::class => [
             FacebookCommentListener::class
         ],
-        FacebookUpdatePostEvent::class => [
-            FacebookUpdatePostListener::class
+        FacebookUpdateCommentEvent::class => [
+            FacebookUpdateCommentListener::class
+        ],
+        FacebookDeleteCommentEvent::class => [
+            FacebookDeleteCommentListener::class
         ]
 
     ];

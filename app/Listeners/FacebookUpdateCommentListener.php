@@ -2,12 +2,12 @@
 
 namespace App\Listeners;
 
-use App\Events\FacebookUpdatePostEvent;
-use App\Jobs\UpdatePostJob;
+use App\Events\FacebookUpdateCommentEvent;
+use App\Jobs\UpdateCommentJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
-class FacebookUpdatePostListener
+class FacebookUpdateCommentListener
 {
     /**
      * Create the event listener.
@@ -22,11 +22,11 @@ class FacebookUpdatePostListener
     /**
      * Handle the event.
      *
-     * @param  \App\Events\FacebookUpdatePostEvent  $event
+     * @param  \App\Events\FacebookUpdateCommentEvent  $event
      * @return void
      */
-    public function handle(FacebookUpdatePostEvent $event)
+    public function handle(FacebookUpdateCommentEvent $event)
     {
-        UpdatePostJob::dispatch($event);
+        UpdateCommentJob::dispatch($event);
     }
 }

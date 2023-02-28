@@ -2,12 +2,12 @@
 
 namespace App\Listeners;
 
-use App\Events\FacebookUpdatePostEvent;
-use App\Jobs\UpdatePostJob;
+use App\Events\FacebookDeleteCommentEvent;
+use App\Jobs\DeleteCommentJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
-class FacebookUpdatePostListener
+class FacebookDeleteCommentListener
 {
     /**
      * Create the event listener.
@@ -22,11 +22,11 @@ class FacebookUpdatePostListener
     /**
      * Handle the event.
      *
-     * @param  \App\Events\FacebookUpdatePostEvent  $event
+     * @param  \App\Events\FacebookDeleteCommentEvent  $event
      * @return void
      */
-    public function handle(FacebookUpdatePostEvent $event)
+    public function handle(FacebookDeleteCommentEvent $event)
     {
-        UpdatePostJob::dispatch($event);
+        DeleteCommentJob::dispatch($event);
     }
 }
