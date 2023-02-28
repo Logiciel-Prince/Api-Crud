@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\testmail;
-use App\Models\Post;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Laravel\Socialite\Facades\Socialite;
-use App\Models\User;
-use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Exception;
+use App\Models\{
+    User,
+    Post
+};
+use Illuminate\Support\Facades\{
+    Http,
+    Hash,
+    Auth
+};
 
 class Controller extends BaseController
 {
@@ -72,26 +73,38 @@ class Controller extends BaseController
         $data = Post::where('postfbid',$request->id)->first();
         if(empty($data))
         {
-            $url = $request->full_picture;
-            $rep = file_get_contents($url);
-            $extension = explode('?',$url);
-            $ext = explode('.',$extension[0]);
-            $imageName = time().'.'.$ext[5];
-            $new = 'storage/images/'.$imageName;
-            $upload =file_put_contents($new, $rep);
-            if(array_key_exists('description',$request->toArray())){
+            if(array_key_exists('full_picture',$request->toArray()))
+            {
+                $url = $request->full_picture;
+                $rep = file_get_contents($url);
+                $extension = explode('?',$url);
+                $ext = explode('.',$extension[0]);
+                $imageName = time().'.'.$ext[5];
+                $new = 'storage/images/'.$imageName;
+                $upload =file_put_contents($new, $rep);
+                if(array_key_exists('description',$request->toArray())){
+                }
+                else{
+                    $request['description'] = 'No Description';
+                }
+                Post::create([
+                    'user_id' => auth()->user()->id,
+                    'category_id' => 17,
+                    'postfbid' => $request->id,
+                    'title' => 'facebook',
+                    'desc' => $request->description,
+                    'image' => $imageName
+                ]);
             }
             else{
-                $request['description'] = 'No Description';
+                Post::create([
+                    'user_id' => auth()->user()->id,
+                    'category_id' => 17,
+                    'postfbid' => $request->id,
+                    'title' => 'facebook',
+                    'desc' => $request->message,
+                ]);
             }
-            Post::create([
-                'user_id' => auth()->user()->id,
-                'category_id' => 17,
-                'postfbid' => $request->id,
-                'title' => 'facebook',
-                'desc' => $request->description,
-                'image' => $imageName
-            ]);
         }
     }
 

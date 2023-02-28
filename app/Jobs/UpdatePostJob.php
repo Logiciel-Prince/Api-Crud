@@ -4,14 +4,14 @@ namespace App\Jobs;
 
 use App\Models\Post;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\{
+    Auth,
+    Http,
+};
 
 class UpdatePostJob implements ShouldQueue
 {
@@ -73,16 +73,13 @@ class UpdatePostJob implements ShouldQueue
         {
             $imageName = $event->data['imageName'];
             $response =  Http::delete(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$this->access_token);
-            Log::info($response);
             $image = public_path('storage/images/'.$imageName);
             $response = Http::attach('attachment',file_get_contents($image),$imageName)->post(env('GRAPH_API_URL').'me/photos?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
-            Log::info($response);
             Post::where('id',$event->data['data']['id'])
                     ->update(['postfbid' => $response->json('post_id')]);
             return $response;
         }
         $response =  Http::post(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$this->access_token.'&message='.$event->data['message']['desc']);
-        Log::info($response);
         return $response;
     }
 }

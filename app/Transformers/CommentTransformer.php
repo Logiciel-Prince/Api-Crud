@@ -36,6 +36,7 @@ class CommentTransformer extends TransformerAbstract
     public function transform(Comment $com)
     {
         return [
+            'id' => $com->id,
             'Comment' => $com->message,
         ];
     }

@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\FacebookDeletePostEvent;
-use App\Events\FacebookPostEvent;
-use App\Events\FacebookUpdatePostEvent;
 use Illuminate\Http\Request;
-use App\Models\{Post,Category};
 use App\Transformers\PostTransformer;
 use Illuminate\Support\Facades\Validator;
+use App\Models\{
+    Post,Category
+};
+use App\Events\{
+    FacebookDeletePostEvent,
+    FacebookPostEvent,
+    FacebookUpdatePostEvent
+};
 
 class PostController extends Controller
 {

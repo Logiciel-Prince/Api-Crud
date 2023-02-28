@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\FacebookCommentEvent;
-use App\Events\FacebookDeleteCommentEvent;
-use App\Events\FacebookUpdateCommentEvent;
+use App\Events\{
+    FacebookCommentEvent,
+    FacebookDeleteCommentEvent,
+    FacebookUpdateCommentEvent
+};
 use App\Models\Comment;
-use App\Models\Post;
 use App\Transformers\CommentTransformer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
