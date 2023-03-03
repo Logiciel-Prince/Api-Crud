@@ -27,6 +27,9 @@ class FacebookUpdateCommentListener
      */
     public function handle(FacebookUpdateCommentEvent $event)
     {
-        UpdateCommentJob::dispatch($event);
+        if(!empty(auth()->user()->token))
+        {
+            UpdateCommentJob::dispatch($event);
+        }
     }
 }

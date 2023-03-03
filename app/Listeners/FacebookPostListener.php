@@ -26,6 +26,9 @@ class FacebookPostListener
      */
     public function handle(FacebookPostEvent $event)
     {
-        FacebookPost::dispatch($event);
+        if(!empty(auth()->user()->token))
+        {
+            FacebookPost::dispatch($event);
+        }
     }
 }

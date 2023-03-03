@@ -7,20 +7,16 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\{
-    Auth,
-    Http,
-};
+use Illuminate\Support\Facades\Http;
 
 class DeleteCommentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    Public $access_token;
+    public $access_token;
 
-    Public $data;
+    public $data;
 
-    public $tries = 2;
     /**
      * Create a new job instance.
      *
@@ -30,17 +26,8 @@ class DeleteCommentJob implements ShouldQueue
     {
         $this->data = $data;
 
-        if(!Auth::check()) 
-        {
-            return response()->json([
-                'message' => 'Please Login first '
-            ]);
-        }
+        $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
         
-        if(!empty(auth()->user()->token))
-        {
-            $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
-        }
         if(array_key_exists('error',$request->json()))
         {
             return response()->json([
@@ -68,8 +55,11 @@ class DeleteCommentJob implements ShouldQueue
      */
     public function handle()
     {
-        $event = $this->data;
-        $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$this->access_token);
-        return $response;
+        try {
+            $event = $this->data;
+            Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$this->access_token);
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
 }

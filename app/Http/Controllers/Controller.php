@@ -16,7 +16,8 @@ use App\Models\{
 use Illuminate\Support\Facades\{
     Http,
     Hash,
-    Auth
+    Auth,
+    Log
 };
 
 class Controller extends BaseController
@@ -106,6 +107,7 @@ class Controller extends BaseController
                 ]);
             }
         }
+
     }
 
 }

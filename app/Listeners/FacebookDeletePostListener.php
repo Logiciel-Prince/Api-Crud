@@ -27,6 +27,9 @@ class FacebookDeletePostListener
      */
     public function handle(FacebookDeletePostEvent $event)
     {
-        DeletePostJob::dispatch($event);
+        if(!empty(auth()->user()->token))
+        {
+            DeletePostJob::dispatch($event);
+        }
     }
 }

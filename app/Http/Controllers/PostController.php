@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 use App\Transformers\PostTransformer;
 use Illuminate\Support\Facades\Validator;
 use App\Models\{
-    Post,Category
+    Post,
+    Category
 };
 use App\Events\{
     FacebookDeletePostEvent,
@@ -21,63 +22,35 @@ class PostController extends Controller
 
     public function updatePost(Request $request,$id)
     {   
-        $user = auth()->user()->id;
-        $data = Post::where('user_id',$user)
+        $validate = Validator::make($request->all(), [
+                'title' => 'required|min:3',
+                'desc' => 'required',
+                'image' => 'mimes:png,jpg',
+            ]);
+        if($validate->fails()){
+            return response()->json([
+                'message' =>$validate->errors(),
+            ],412);
+        }
+        $user_id = auth()->user()->id;
+        $data = Post::where('user_id',$user_id)
                     ->find($id);
-        if($data != null)
+        if($data)
         {
-            $validate = Validator::make($request->all(), [
-                    'title' => 'required|min:3',
-                    'desc' => 'required',
-                    'image' => 'mimes:png,jpg',
-                ]);
-            if($validate->fails()){
-                return response()->json([
-                    'message' =>$validate->errors(),
-                ],412);
-            }
-            if($request->hasFile('image'))
-            {
-                $imageName = time().'.'.$request->image->extension();
-                $request->image->storeAs('public/images/', $imageName);
-                unlink(public_path('storage/images/'.$data->image));
-                event(new FacebookUpdatePostEvent([
-                        'data'=>$data->toArray(),
-                        'message' => $request->only('title','desc'),
-                        'imageName' => $imageName,
-                    ])
-                );
-                $post = [
-                    'title' => $request->title,
-                    'desc' => $request->desc,
-                    'image' => $imageName,
-                ];
-                $d=$data->update($post);
-                if(!empty($d)){
-                    return response()->json([
-                        'message'=>'Post Updated Successful'
-                    ],201);
-                }
-            }
-            else
-            {
-                $post = [
-                    'title' => $request->title,
-                    'desc' => $request->desc,
-                ];
-                if(!empty(auth()->user()->token))
-                {
-                    $response = event(new FacebookUpdatePostEvent([
-                            'data'=>$data->toArray(),
-                            'message' => $request->all(),   
-                        ])
-                    );
-                }
-                $d=$data->update($post);
-                return response()->json([
-                    'message'=>'Post Updated Successful'
-                ],201);
-            }
+            $post = [
+                'title' => $request->title,
+                'desc' => $request->desc,
+            ];
+            $data->update($post);
+            event(new FacebookUpdatePostEvent([
+                    'data'=>$data,
+                    'message' => $request->all()
+                ])
+            );
+
+            return response()->json([
+                'message'=>'Post Updated Successful'
+            ],201);
         }
         else{
             return response()->json([
@@ -143,54 +116,25 @@ public function upload(Request $request){
             'message' => 'Please Select available Category or create a new Category'
         ],404);
     }
-    
+    $imageName = null;
     if($request->hasFile('image'))
     {
         $imageName = time().'.'.$request->image->extension();
         $request->image->storeAs('public/images/', $imageName);
-        $post = Post::create([
-            'user_id' => auth()->user()->id,
-            'title' => $request->title,
-            'desc' => $request->desc,
-            'image' => $imageName,
-            'category_id' => $category->id,
-        ]);
-        if(!empty(auth()->user()->token))
-        {
-            $response  = event (new FacebookPostEvent(['data' => $request->only(['title','desc','category','pagename']),'imageName' => $imageName]));
-            return response()->json([
-                'message' => 'Image Posted Successful',
-                'Post' => $post->orderBy('id', 'desc')->first(),
-                'Response From Facebook' => $response
-            ],201);
-        }
-        return response()->json([
-            'message' =>'Post Created Successfully',
-            'Post' => $post->orderBy('id','desc')->first(),
-            'response from facebook' => 'User Not Connected With Facebook'
-        ],201);            
-           
     }
     $post = Post::create([
         'user_id' => auth()->user()->id,
         'title' => $request->title,
         'desc' => $request->desc,
+        'image' => $imageName,
         'category_id' => $category->id,
     ]);
-    if(!empty(auth()->user()->token))
-    {
-        $response = event(new FacebookPostEvent(['data'=>$request->all()]));
-        return response()->json([
-            'message' => 'Image Posted Successful',
-            'Post' => $post->orderBy('id', 'desc')->first(),
-            'Response From Facebook' => $response
-        ],200);
-    }
+    event (new FacebookPostEvent(['data' => $request->only(['title','desc','category','pagename']),'imageName' => $imageName]));
     return response()->json([
-        'message' =>'Post Created Successfully',
-        'Post' => $post->orderBy('id','desc')->first(),
-        'response from facebook' => 'User Not Connected With Facebook'
-    ],201);  
+        'message' => 'Post Uploaded Successful',
+        'Post' => $post->orderBy('id', 'desc')->first(),
+    ],201);         
+   
 }
 
 //* <-----------------------This Route get all the Post of user from database------------------------------>
@@ -217,17 +161,17 @@ public function upload(Request $request){
     public function deletePost($id){
         $data = Post::where('user_id',auth()->user()->id)
                 ->find($id);
-        if($data != null)
+        if($data)
         {
             if($data->image != null)
             {
-                event(new FacebookDeletePostEvent(['data'=>$data]));
                 unlink(public_path('storage/images/'.$data->image));
             }
             $data -> delete();
+            event(new FacebookDeletePostEvent(['data'=>$data]));
             return response()->json([
                 'message'=>'Post Deleted Successful in Your Account'
-            ],404);
+            ],200);
         }
         else{
             return response()->json([

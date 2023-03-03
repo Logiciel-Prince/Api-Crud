@@ -27,6 +27,9 @@ class FacebookCommentListener
      */
     public function handle(FacebookCommentEvent $event)
     {
-        FacebookComment::dispatch($event);
+        if(!empty(auth()->user()->token))
+        {
+            FacebookComment::dispatch($event);
+        }
     }
 }

@@ -11,10 +11,7 @@ use App\Models\{
     Comment,
     Post
 };
-use Illuminate\Support\Facades\{
-    Auth,
-    Http,
-};
+use Illuminate\Support\Facades\Http;
 
 class FacebookComment implements ShouldQueue
 {
@@ -24,7 +21,6 @@ class FacebookComment implements ShouldQueue
 
     Public $data;
 
-    public $tries = 2;
     /**
      * Create a new job instance.
      *
@@ -34,17 +30,8 @@ class FacebookComment implements ShouldQueue
     {
         $this->data = $data;
 
-        if(!Auth::check()) 
-        {
-            return response()->json([
-                'message' => 'Please Login first '
-            ]);
-        }
+        $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
         
-        if(!empty(auth()->user()->token))
-        {
-            $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
-        }
         if(array_key_exists('error',$request->json()))
         {
             return response()->json([
@@ -72,13 +59,17 @@ class FacebookComment implements ShouldQueue
      */
     public function handle()
     {
-        $event = $this->data;
-        $message = $event->data['data']['message'];
-        $postid = Post::where('id',$event->data['data']['post_id'])->first('postfbid');
-        $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' . $message . '&access_token=' . $this->access_token);
-        Comment::where('id',$event->data['message']['id'])->update([
-            'commentfbid' => $response->json('id'),
-        ]);
-        return $response;
+        try {
+            $event = $this->data;
+            $message = $event->data['data']['message'];
+            $postid = Post::where('id',$event->data['data']['post_id'])->first('postfbid');
+            $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' . $message . '&access_token=' . $this->access_token);
+            Comment::where('id',$event->data['message']['id'])->update([
+                'commentfbid' => $response->json('id'),
+            ]);
+            return true;
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
 }

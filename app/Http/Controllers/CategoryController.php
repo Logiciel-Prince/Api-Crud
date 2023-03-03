@@ -60,11 +60,9 @@ class CategoryController extends Controller
                 'message' => 'Category Deleted Successful'
             ],202);
         }
-        else{
-            return response()->json([
-                'message' => 'Selected Category cannot be deleted'
-            ],400);
-        }
+        return response()->json([
+            'message' => 'Selected Category cannot be deleted'
+        ],400);
     }
 
     //---------------------This function update The existing Categories --------------------------//
@@ -74,7 +72,7 @@ class CategoryController extends Controller
         $ob = Category::where('id',$id);
         if(!empty($ob))
         {
-            $data = $ob -> update(['title' => $request->title]);
+            $ob -> update(['title' => $request->title]);
             return response()->json([
                 'message' => 'Category updated Successfull',
             ],202);

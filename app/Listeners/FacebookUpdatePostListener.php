@@ -27,6 +27,9 @@ class FacebookUpdatePostListener
      */
     public function handle(FacebookUpdatePostEvent $event)
     {
-        UpdatePostJob::dispatch($event);
+        if(!empty(auth()->user()->token))
+        {
+            UpdatePostJob::dispatch($event);
+        }
     }
 }

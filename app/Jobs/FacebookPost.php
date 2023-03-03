@@ -8,20 +8,19 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\{
-    Auth,
-    Http,
-};
+use Illuminate\Support\Facades\Http;
 
 class FacebookPost implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    Public $access_token;
+    public $access_token;
 
-    Public $data;
+    public $userToken;
 
-    public $tries = 2;
+    public $data;
+
+    public $tries;
 
     /**
      * Create a new job instance.
@@ -30,19 +29,42 @@ class FacebookPost implements ShouldQueue
      */
     public function __construct($data)
     {
+        $this->tries = config('queue.connections.database.tries');
         $this->data = $data;
-
-        if(!Auth::check()) 
-        {
-            return response()->json([
-                'message' => 'Please Login first'
-            ]);
-        }
+        $this->userToken = auth()->user()->token;
         
-        if(!empty(auth()->user()->token))
-        {
-            $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
+    }
+
+    /**
+     * Execute the job.
+     *
+     * @return 
+     */
+    public function handle()
+    {
+        $this->getAccessToken($this->userToken);
+        try {
+            $event = $this->data;
+            if($event->data['imageName'])
+            {
+                $imageName = $event->data['imageName'];
+                $image = public_path('storage/images/'.$imageName);
+                $response = Http::attach('attachment',file_get_contents($image),$imageName)->post(env('GRAPH_API_URL').'me/photos?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
+                Post::where('image',$imageName)
+                        ->update(['postfbid' => $response->json('post_id')]);
+                return true;
+            }
+            $response =  Http::post(env('GRAPH_API_URL').'me/feed?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
+            Post::where('title',$event->data['data']['title'])
+                 ->update(['postfbid' => $response->json('id')]);
+            return true;
+        } catch (\Exception $e) {
+            return $e->getMessage();
         }
+    }
+
+    private function getAccessToken($token){
+        $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.$token);
         if(array_key_exists('error',$request->json()))
         {
             return response()->json([
@@ -61,28 +83,5 @@ class FacebookPost implements ShouldQueue
                 $this->access_token = $d['access_token'];  
             }
         }
-    }
-
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
-    public function handle()
-    {
-        $event = $this->data;
-        if(array_key_exists('imageName',$event->data))
-        {
-            $imageName = $event->data['imageName'];
-            $image = public_path('storage/images/'.$imageName);
-            $response = Http::attach('attachment',file_get_contents($image),$imageName)->post(env('GRAPH_API_URL').'me/photos?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
-            Post::where('image',$imageName)
-                    ->update(['postfbid' => $response->json('post_id')]);
-            return $response;
-        }
-        $response =  Http::post(env('GRAPH_API_URL').'me/feed?access_token='.$this->access_token.'&message='.$event->data['data']['desc']);
-        Post::where('title',$event->data['data']['title'])
-             ->update(['postfbid' => $response->json('id')]);
-        return $response;
     }
 }

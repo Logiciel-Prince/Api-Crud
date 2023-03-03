@@ -43,16 +43,13 @@ class CommentController extends Controller
                 'post_id' => $request->post_id,
                 'message' => $request->message
             ]);
-        if(auth()->user()->token)
-        {
-            event (new FacebookCommentEvent(['data' => $request->all(),'message'=>$data]));
-        }
-                return response()->json([
-                'message' => 'Comment Posted Successful',
-                'comment' => $data
-                            ->orderBy('id', 'desc')
-                            ->first(),
-            ]);
+        event (new FacebookCommentEvent(['data' => $request->all(),'message'=>$data]));
+        return response()->json([
+        'message' => 'Comment Posted Successful',
+        'comment' => $data
+                    ->orderBy('id', 'desc')
+                    ->first(),
+        ]);
     }
 
     //-----------------------------This function Create the comment on facebook posts---------------------------//
@@ -94,7 +91,7 @@ class CommentController extends Controller
                 ->find($id);
         if(!empty($data))
         {
-            $response = event(new FacebookDeleteCommentEvent(['data'=>$data]));
+            event(new FacebookDeleteCommentEvent(['data'=>$data]));
             $data -> delete();
             return response()->json([
                 'message'=>'Comment Deleted Successful'

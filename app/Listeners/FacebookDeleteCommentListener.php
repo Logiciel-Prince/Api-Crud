@@ -27,6 +27,9 @@ class FacebookDeleteCommentListener
      */
     public function handle(FacebookDeleteCommentEvent $event)
     {
-        DeleteCommentJob::dispatch($event);
+        if(!empty(auth()->user()->token))
+        {
+            DeleteCommentJob::dispatch($event);
+        };
     }
 }
