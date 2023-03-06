@@ -7,7 +7,8 @@ use App\Transformers\PostTransformer;
 use Illuminate\Support\Facades\Validator;
 use App\Models\{
     Post,
-    Category
+    Category,
+    FacebookPage
 };
 use App\Events\{
     FacebookDeletePostEvent,
@@ -34,7 +35,7 @@ class PostController extends Controller
         }
         $user_id = auth()->user()->id;
         $data = Post::where('user_id',$user_id)
-                    ->find($id);
+                    ->where('id',$id);
         if($data)
         {
             $post = [
@@ -43,7 +44,7 @@ class PostController extends Controller
             ];
             $data->update($post);
             event(new FacebookUpdatePostEvent([
-                    'data'=>$data,
+                    'data'=>$data->with('pages')->first(),
                     'message' => $request->all()
                 ])
             );
@@ -52,11 +53,9 @@ class PostController extends Controller
                 'message'=>'Post Updated Successful'
             ],201);
         }
-        else{
-            return response()->json([
-                'message'=>'Post not Available in Your Account'
-            ],404);
-        }
+        return response()->json([
+            'message'=>'Post not Available in Your Account'
+        ],404);
 
     }
     //* <-----------------------This Route Search Post from database------------------------------>
@@ -102,12 +101,20 @@ public function upload(Request $request){
         'title' => 'required|unique:posts|min:3',
         'desc' => 'required',
         'image' => 'mimes:png,jpg|image|max:2048',
-        'category' => 'required'
+        'category' => 'required',
+        'pagename' => 'exists:facebook_pages,page_name'
     ]);
     if($validate->fails()){
         return response()->json([
             'message' =>$validate->errors(),
         ],412);
+    }
+    $page = FacebookPage::where('page_name',$request->pagename)
+            ->where('user_id',auth()->user()->id)->first();
+    if(!$page){
+        return response()->json([
+            'message' => 'Page that you are selected not found'
+        ],404);
     }
     $category = Category::where('title','like','%'.$request->category.'%')->first('id');
     if (empty($category))
@@ -124,12 +131,13 @@ public function upload(Request $request){
     }
     $post = Post::create([
         'user_id' => auth()->user()->id,
+        'page_id' => $page->id,
         'title' => $request->title,
         'desc' => $request->desc,
         'image' => $imageName,
         'category_id' => $category->id,
     ]);
-    event (new FacebookPostEvent(['data' => $request->only(['title','desc','category','pagename']),'imageName' => $imageName]));
+    event (new FacebookPostEvent(['data' => $request->only(['title','desc','category','pagename']),'pagetoken' =>$page->access_token,'imageName' => $imageName]));
     return response()->json([
         'message' => 'Post Uploaded Successful',
         'Post' => $post->orderBy('id', 'desc')->first(),
@@ -160,15 +168,15 @@ public function upload(Request $request){
 
     public function deletePost($id){
         $data = Post::where('user_id',auth()->user()->id)
-                ->find($id);
+                ->where('id',$id)->with('pages')->first();
         if($data)
         {
             if($data->image != null)
             {
                 unlink(public_path('storage/images/'.$data->image));
             }
-            $data -> delete();
             event(new FacebookDeletePostEvent(['data'=>$data]));
+            $data -> delete();
             return response()->json([
                 'message'=>'Post Deleted Successful in Your Account'
             ],200);

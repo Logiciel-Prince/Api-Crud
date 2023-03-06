@@ -10,6 +10,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
 use Exception;
 use App\Models\{
+    FacebookPage,
     User,
     Post
 };
@@ -51,13 +52,18 @@ class Controller extends BaseController
                 ]);
 
             }
+
+            $response = $this->extendToken($user);
+            
             $newUser = User::updateOrCreate(['email' => $user->email],[
                     'name' => $user->name,
                     'facebook_id'=> $user->id,
                     'password' => Hash::make('123456'),
-                    'token' => $user->token,
+                    'token' => $response->json('access_token'),
                 ]);
-
+            
+            $this->addPages($newUser);
+            
             Auth::login($newUser);
 
             return response()->json([
@@ -68,6 +74,28 @@ class Controller extends BaseController
         } catch (Exception $e) {
             dd($e->getMessage());
         }
+    }
+
+    public function addPages($newUser){
+
+        $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
+
+        foreach($request['data'] as $d)
+        {
+            FacebookPage::create([
+                'user_id' => $newUser->id,
+                'page_id' => $d['id'],
+                'page_name' => $d['name'],
+                'access_token' => $d['access_token']
+            ]);
+        }
+
+
+    }
+
+    public function extendToken($user){
+        $response = Http::get(env('GRAPH_API_URL').'oauth/access_token?grant_type=fb_exchange_token&client_id='.env('FACEBOOK_CLIENT_ID').'&client_secret='.env('FACEBOOK_CLIENT_SECRET').'&fb_exchange_token='.$user->token);
+        return $response;
     }
 
     public function faceBookPost(Request $request){  

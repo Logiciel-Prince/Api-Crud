@@ -13,15 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('posts', function (Blueprint $table) {
+        Schema::create('facebook_pages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
-                ->constrained('users');
-            $table->foreignId('category_id')
-            ->constrained('categories');
-            $table->string('title');
-            $table->string('desc');
-            $table->string('image')->nullable();
+                    ->constrained('users');
+            $table->string('page_id');
+            $table->string('page_name');
+            $table->text('access_token');
             $table->timestamps();
         });
     }
@@ -33,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('posts');
+        Schema::dropIfExists('facebook_pages');
     }
 };

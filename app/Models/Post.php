@@ -17,7 +17,8 @@ class Post extends Model
         'desc',
         'image',
         'category_id',
-        'postfbid'
+        'postfbid',
+        'page_id'
     ];
     public function category()
     {
@@ -28,6 +29,10 @@ class Post extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+    public function pages()
+    {
+        return $this->belongsTo(FacebookPage::class,'page_id');
     }
 
 }

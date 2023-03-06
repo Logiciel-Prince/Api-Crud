@@ -13,9 +13,7 @@ class UpdateCommentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    Public $access_token;
-
-    Public $data;
+    public $data;
 
     /**
      * Create a new job instance.
@@ -24,28 +22,9 @@ class UpdateCommentJob implements ShouldQueue
      */
     public function __construct($data)
     {
+
         $this->data = $data;
        
-        $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
-        
-        if(array_key_exists('error',$request->json()))
-        {
-            return response()->json([
-                'message' => 'Invalid access_token or Your access_token may be expired',
-            ],401);
-        }
-        if(array_key_exists('pagename',$this->data->data['message']))
-        {
-            $pageName = $this->data->data['message']['pagename'];
-        }
-        $name = empty($pageName) ? 'Api test' : $pageName;
-        foreach($request['data'] as $d)
-        {
-            if($d['name'] == $name)
-            {
-                $this->access_token = $d['access_token'];  
-            }
-        }
     }
 
     /**
@@ -57,7 +36,7 @@ class UpdateCommentJob implements ShouldQueue
     {
         try {
             $event = $this->data;
-            Http::post(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$this->access_token.'&message='.$event->data['message']['message']);
+            Http::post(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$event->data['pagetoken'].'&message='.$event->data['message']['message']);
         } catch (\Exception $e) {
             return $e->getMessage();
         }

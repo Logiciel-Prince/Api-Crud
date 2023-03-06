@@ -24,28 +24,9 @@ class DeletePostJob implements ShouldQueue
      */
     public function __construct($data)
     {
+
         $this->data = $data;
         
-        $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
-      
-        if(array_key_exists('error',$request->json()))
-        {
-            return response()->json([
-                'message' => 'Invalid access_token or Your access_token may be expired',
-            ],401);
-        }
-        if(array_key_exists('pagename',$this->data->data['data']->toArray()))
-        {
-            $pageName = $this->data->data['data']['pagename'];
-        }
-        $name = empty($pageName) ? 'Api test' : $pageName;
-        foreach($request['data'] as $d)
-        {
-            if($d['name'] == $name)
-            {
-                $this->access_token = $d['access_token'];  
-            }
-        }
     }
 
     /**
@@ -57,7 +38,7 @@ class DeletePostJob implements ShouldQueue
     {
         try {
             $event = $this->data;
-            Http::delete(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$this->access_token);
+            Http::delete(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$event->data['data']->pages['access_token']);
         } catch (\Exception $e) {
             return $e->getMessage();
         }

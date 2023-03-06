@@ -8,14 +8,15 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class UpdatePostJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    Public $access_token;
+    public $data;
 
-    Public $data;
+    public $tries;
 
     /**
      * Create a new job instance.
@@ -25,27 +26,7 @@ class UpdatePostJob implements ShouldQueue
     public function __construct($data)
     {
         $this->data = $data;
-        
-        $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
-        
-        if(array_key_exists('error',$request->json()))
-        {
-            return response()->json([
-                'message' => 'Invalid access_token or Your access_token may be expired',
-            ],401);
-        }
-        if(array_key_exists('pagename',$this->data->data['message']))
-        {
-            $pageName = $this->data->data['message']['pagename'];
-        }
-        $name = empty($pageName) ? 'Api test' : $pageName;
-        foreach($request['data'] as $d)
-        {
-            if($d['name'] == $name)
-            {
-                $this->access_token = $d['access_token'];  
-            }
-        }
+        $this->tries = config('queue.connections.database.tries');
     }
 
     /**
@@ -57,8 +38,8 @@ class UpdatePostJob implements ShouldQueue
     {
         try {
             $event = $this->data;
-            $response =  Http::post(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$this->access_token.'&message='.$event->data['message']['desc']);
-            return $response;
+            Http::post(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$event->data['data']->pages['access_token'].'&message='.$event->data['message']['desc']);
+            return true;
         } catch (\Exception $e) {
             return $e->getMessage();
         }

@@ -12,12 +12,11 @@ use App\Models\{
     Post
 };
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FacebookComment implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    Public $access_token;
 
     Public $data;
 
@@ -28,28 +27,9 @@ class FacebookComment implements ShouldQueue
      */
     public function __construct($data)
     {
+
         $this->data = $data;
 
-        $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
-        
-        if(array_key_exists('error',$request->json()))
-        {
-            return response()->json([
-                'message' => 'Invalid access_token or Your access_token may be expired',
-            ],401);
-        }
-        if(array_key_exists('pagename',$this->data->data['data']))
-        {
-            $pageName = $this->data->data['data']['pagename'];
-        }
-        $name = empty($pageName) ? 'Api test' : $pageName;
-        foreach($request['data'] as $d)
-        {
-            if($d['name'] == $name)
-            {
-                $this->access_token = $d['access_token'];  
-            }
-        }
     }
 
     /**
@@ -63,7 +43,7 @@ class FacebookComment implements ShouldQueue
             $event = $this->data;
             $message = $event->data['data']['message'];
             $postid = Post::where('id',$event->data['data']['post_id'])->first('postfbid');
-            $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' . $message . '&access_token=' . $this->access_token);
+            $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' . $message . '&access_token=' . $event->data['pagetoken']);
             Comment::where('id',$event->data['message']['id'])->update([
                 'commentfbid' => $response->json('id'),
             ]);
