@@ -7,7 +7,9 @@ use App\Events\{
     FacebookDeleteCommentEvent,
     FacebookUpdateCommentEvent
 };
+use App\Helpers\GetAccessToken;
 use App\Models\Comment;
+use App\Models\FacebookPage;
 use App\Models\Post;
 use App\Transformers\CommentTransformer;
 use Illuminate\Http\Request;
@@ -32,8 +34,8 @@ class CommentController extends Controller
         $validate = Validator::make($request->all(), [
             'post_id' => 'required',
             'message' => 'required',
+            'pagename' => 'required|exists:facebook_pages,page_name'
         ]);
-        
         if ($validate->fails()) {
             return response()->json([
                 'message' => $validate->errors(),
@@ -44,8 +46,10 @@ class CommentController extends Controller
             'post_id' => $request->post_id,
             'message' => $request->message
         ]);
-        $page = Post::where('id',$request->post_id)->with('pages')->first();
-        event (new FacebookCommentEvent(['data' => $request->all(),'pagetoken' => $page->pages['access_token'],'message'=>$data]));
+        event (new FacebookCommentEvent([
+            'data' => $request->all(),
+            'message'=>$data
+        ]));
         return response()->json([
         'message' => 'Comment Posted Successful',
         'comment' => $data
@@ -68,15 +72,23 @@ class CommentController extends Controller
         }
 
         $data = Comment::where('user_id',auth()->user()->id)
-                ->where('id',$id)->with('post')->first();
+                ->where('id',$id)
+                ->with('post')
+                ->first();
         if(!empty($data))
         {
             $comment = [
                 'message' => $request->message
             ];
-            $page = Post::where('id',$data->post['id'])->with('pages')->first();
+            $page = Post::where('id',$data->post['id'])
+                    ->with('pages')
+                    ->first();
             $data -> update($comment);
-            event(new FacebookUpdateCommentEvent(['data' => $data,'pagetoken' => $page->pages['access_token'],'message' => $comment]));
+            event(new FacebookUpdateCommentEvent([
+                'data' => $data,
+                'pagetoken' => $page->pages['access_token'],
+                'message' => $comment
+            ]));
             return response()->json([
                 'message'=>'Comment Updated Successful'
             ],201);
@@ -91,11 +103,14 @@ class CommentController extends Controller
 
     public function destroy($id){
         $data = Comment::where('user_id',auth()->user()->id)
-        ->where('id',$id)->with('post')->first();
+                        ->where('id',$id)
+                        ->with('post')
+                        ->first();
         if(!empty($data))
         {
-            $page = Post::where('id',$data->post['id'])->with('pages')->first();
-            event(new FacebookDeleteCommentEvent(['data'=>$data,'pagetoken' => $page->pages['access_token']]));
+            event(new FacebookDeleteCommentEvent([
+                'data'=>$data,
+            ]));
             $data -> delete();
             return response()->json([
                 'message'=>'Comment Deleted Successful'

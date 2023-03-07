@@ -35,19 +35,21 @@ class PostController extends Controller
         }
         $user_id = auth()->user()->id;
         $data = Post::where('user_id',$user_id)
-                    ->where('id',$id);
+                    ->where('id',$id)
+                    ->with('pages')
+                    ->first();
         if($data)
         {
             $post = [
                 'title' => $request->title,
                 'desc' => $request->desc,
             ];
-            $data->update($post);
             event(new FacebookUpdatePostEvent([
-                    'data'=>$data->with('pages')->first(),
+                    'data'=>$data,
                     'message' => $request->all()
                 ])
             );
+            $data->update($post);
 
             return response()->json([
                 'message'=>'Post Updated Successful'
@@ -110,7 +112,8 @@ public function upload(Request $request){
         ],412);
     }
     $page = FacebookPage::where('page_name',$request->pagename)
-            ->where('user_id',auth()->user()->id)->first();
+            ->where('user_id',auth()->user()->id)
+            ->first();
     if(!$page){
         return response()->json([
             'message' => 'Page that you are selected not found'
@@ -137,7 +140,11 @@ public function upload(Request $request){
         'image' => $imageName,
         'category_id' => $category->id,
     ]);
-    event (new FacebookPostEvent(['data' => $request->only(['title','desc','category','pagename']),'pagetoken' =>$page->access_token,'imageName' => $imageName]));
+    event (new FacebookPostEvent([
+        'data' => $request->only(['title','desc','category','pagename']),
+        'pagetoken' =>$page->access_token,
+        'imageName' => $imageName
+    ]));
     return response()->json([
         'message' => 'Post Uploaded Successful',
         'Post' => $post->orderBy('id', 'desc')->first(),
@@ -154,7 +161,10 @@ public function upload(Request $request){
             $data =Post::get();
         }
         else{
-            $post = Post::where('user_id',auth()->user()->id)->with('comments')->with('category')->get();
+            $post = Post::where('user_id',auth()->user()->id)
+                        ->with('comments')
+                        ->with('category')
+                        ->get();
             return fractal($post,new PostTransformer());
         }
         return response()->json([
@@ -168,14 +178,18 @@ public function upload(Request $request){
 
     public function deletePost($id){
         $data = Post::where('user_id',auth()->user()->id)
-                ->where('id',$id)->with('pages')->first();
+                ->where('id',$id)
+                ->with('pages')
+                ->first();
         if($data)
         {
             if($data->image != null)
             {
                 unlink(public_path('storage/images/'.$data->image));
             }
-            event(new FacebookDeletePostEvent(['data'=>$data]));
+            event(new FacebookDeletePostEvent([
+                'data'=>$data
+            ]));
             $data -> delete();
             return response()->json([
                 'message'=>'Post Deleted Successful in Your Account'

@@ -56,9 +56,10 @@
 
 <div class="fb-login-button" data-width="" data-size="" data-button-type="" data-layout="" data-auto-logout-link="false" data-use-continue-as="false"></div>
 <!-- The JS SDK Login Button -->
-
-<fb:login-button scope="public_profile,email" onlogin="checkLoginState();">
-</fb:login-button>
+<form action="http://localhost/Prince/OJT/Api%20Crud/public/auth/facebook" method="get">
+  <fb:login-button scope="public_profile,email,user_birthday,user_friends,user_posts,user_likes,pages_manage_posts,user_photos,publish_videos,pages_manage_cta,pages_shows_list,pages_messaging,publish_to_groups,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement" onlogin="checkLoginState()"type = submit>
+  </fb:login-button>
+</form>
 
 <div id="status">
 </div>

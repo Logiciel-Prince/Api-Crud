@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\{
     Http,
     Hash,
     Auth,
-    Log
 };
 
 class Controller extends BaseController
@@ -61,8 +60,8 @@ class Controller extends BaseController
                     'password' => Hash::make('123456'),
                     'token' => $response->json('access_token'),
                 ]);
-            
-            $this->addPages($newUser);
+            $pageId = null;
+            $this->addPages($newUser,$pageId);
             
             Auth::login($newUser);
 
@@ -79,10 +78,10 @@ class Controller extends BaseController
     public function addPages($newUser){
 
         $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
-
+        
         foreach($request['data'] as $d)
         {
-            FacebookPage::create([
+            $data = FacebookPage::updateOrCreate(['page_id' => $d['id']],[
                 'user_id' => $newUser->id,
                 'page_id' => $d['id'],
                 'page_name' => $d['name'],
@@ -90,7 +89,20 @@ class Controller extends BaseController
             ]);
         }
 
+        return $data;
 
+    }
+
+    public function refreshPageToken($pageId){
+        $page = FacebookPage::where('id',$pageId)->with('user')->first();
+
+            $d = Http::get(env('GRAPH_API_URL').$page['page_id'].'?fields=id,name,access_token&access_token='.$page->user['token']);
+
+            $data = FacebookPage::updateOrCreate(['page_id' => $d['id']],[
+                'access_token' => $d['access_token']
+            ]);
+
+            return $data;
     }
 
     public function extendToken($user){
@@ -102,6 +114,7 @@ class Controller extends BaseController
         $data = Post::where('postfbid',$request->id)->first();
         if(empty($data))
         {
+            $imageName = null;
             if(array_key_exists('full_picture',$request->toArray()))
             {
                 $url = $request->full_picture;
@@ -111,9 +124,7 @@ class Controller extends BaseController
                 $imageName = time().'.'.$ext[5];
                 $new = 'storage/images/'.$imageName;
                 $upload =file_put_contents($new, $rep);
-                if(array_key_exists('description',$request->toArray())){
-                }
-                else{
+                if(!array_key_exists('description',$request->toArray())){
                     $request['description'] = 'No Description';
                 }
                 Post::create([
@@ -123,15 +134,6 @@ class Controller extends BaseController
                     'title' => 'facebook',
                     'desc' => $request->description,
                     'image' => $imageName
-                ]);
-            }
-            else{
-                Post::create([
-                    'user_id' => auth()->user()->id,
-                    'category_id' => 17,
-                    'postfbid' => $request->id,
-                    'title' => 'facebook',
-                    'desc' => $request->message,
                 ]);
             }
         }

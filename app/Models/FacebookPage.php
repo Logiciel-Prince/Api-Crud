@@ -15,4 +15,8 @@ class FacebookPage extends Model
         'page_name',
         'access_token'
     ];
+
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
 }

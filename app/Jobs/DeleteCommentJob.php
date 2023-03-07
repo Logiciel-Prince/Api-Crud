@@ -2,6 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Helpers\GetAccessToken;
+use App\Http\Controllers\Controller;
+use App\Models\FacebookPage;
+use App\Models\Post;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -38,7 +42,25 @@ class DeleteCommentJob implements ShouldQueue
     {
         try {
             $event = $this->data;
-            Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$event->data['pagetoken']);
+
+            dd($event);
+
+            $token = (new GetAccessToken)->getPageAccessToken($event->data);
+
+            $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$token);
+            
+            $postid = Post::where('id',$event->data['data']['post_id'])->first();
+
+            if(array_key_exists('error',$response->json()) && $response->json()['error']['code'] == 190){
+
+                (new Controller)->refreshPageToken($postid['page_id']); 
+
+                $token = (new GetAccessToken)->getPageAccessToken($event->data['message']['pagename']);
+
+                $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$token);
+
+            }
+
         } catch (\Exception $e) {
             return $e->getMessage();
         }
