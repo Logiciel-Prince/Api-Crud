@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\{
     Http,
     Hash,
     Auth,
+    Log,
 };
 
 class Controller extends BaseController
@@ -112,6 +113,7 @@ class Controller extends BaseController
 
     public function faceBookPost(Request $request){  
         $data = Post::where('postfbid',$request->id)->first();
+        Log::info($request);
         if(empty($data))
         {
             $imageName = null;
@@ -137,6 +139,7 @@ class Controller extends BaseController
                 ]);
             }
         }
+        // return $request;
 
     }
 
