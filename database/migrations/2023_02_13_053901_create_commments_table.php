@@ -15,8 +15,12 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('post_id')->constrained('posts');
+            $table->foreignId('user_id')
+                    ->constrained('users');
+            $table->foreignId('post_id')
+                    ->constrained('posts');
+            $table->foreignId('page_id')
+            ->constrained('facebook_pages');
             $table->string('message');
             $table->text('commentfbid');
             $table->softDeletes();

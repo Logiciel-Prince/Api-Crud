@@ -5,7 +5,8 @@ use App\Http\Controllers\{
     UserController,
     PostController,
     CategoryController,
-    CommentController
+    CommentController,
+    Controller
 };
 /*
 |--------------------------------------------------------------------------
@@ -124,7 +125,6 @@ Route::Post('login',[UserController::class,'login']);
 //* <-----------------------This Route Show Only Selected User ------------------------------>
 
 Route::Post('getuser/{id}',[UserController::class,'show']);
-
 
 
 

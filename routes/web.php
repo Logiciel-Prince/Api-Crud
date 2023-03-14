@@ -32,10 +32,15 @@ Route::get('auth/facebook',[Controller::class,'redirectToFacebook'])->name('auth
 
 Route::get('auth/facebook/callback',[Controller::class, 'handleFacebookCallback']);
 
-Route::group(['middleware'=>['auth:api']],function () {
+// Route::group(['middleware'=>['auth:api']],function () {
 
-    Route::get('postcallback',[Controller::class,'faceBookPost']);
+//     Route::get('postcallback',[Controller::class,'faceBookPost']);
     
-});
+// });
+
+Route::get('postcallback',[Controller::class,'faceBookPost']);
+
+
+
 
 

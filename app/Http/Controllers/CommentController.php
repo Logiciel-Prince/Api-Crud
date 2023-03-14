@@ -23,7 +23,7 @@ class CommentController extends Controller
     public function index()
     {
         $data = Comment::with('post')
-                ->get();
+                        ->get();
         return fractal($data,new CommentTransformer());
     }
 
@@ -41,10 +41,12 @@ class CommentController extends Controller
                 'message' => $validate->errors(),
             ], 412);
         }
+        $pageId = FacebookPage::where('page_name',$request->pagename)->first();
         $data = Comment::create([
             'user_id' => auth()->user()->id,
             'post_id' => $request->post_id,
-            'message' => $request->message
+            'message' => $request->message,
+            'page_id' => $pageId->id
         ]);
         event (new FacebookCommentEvent([
             'data' => $request->all(),
@@ -72,21 +74,17 @@ class CommentController extends Controller
         }
 
         $data = Comment::where('user_id',auth()->user()->id)
-                ->where('id',$id)
-                ->with('post')
-                ->first();
+                        ->where('id',$id)
+                        ->with('post')
+                        ->first();
         if(!empty($data))
         {
             $comment = [
                 'message' => $request->message
             ];
-            $page = Post::where('id',$data->post['id'])
-                    ->with('pages')
-                    ->first();
             $data -> update($comment);
             event(new FacebookUpdateCommentEvent([
                 'data' => $data,
-                'pagetoken' => $page->pages['access_token'],
                 'message' => $comment
             ]));
             return response()->json([

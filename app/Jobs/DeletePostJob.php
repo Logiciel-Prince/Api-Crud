@@ -2,6 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Helpers\GetAccessToken;
+use App\Http\Controllers\Controller;
+use App\Models\FacebookPage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,9 +16,9 @@ class DeletePostJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    Public $access_token;
+    public $tries;
 
-    Public $data;
+    public $data;
 
     /**
      * Create a new job instance.
@@ -24,7 +27,7 @@ class DeletePostJob implements ShouldQueue
      */
     public function __construct($data)
     {
-
+        $this->tries = config('queue.tries');
         $this->data = $data;
         
     }
@@ -38,9 +41,29 @@ class DeletePostJob implements ShouldQueue
     {
         try {
             $event = $this->data;
-            Http::delete(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$event->data['data']->pages['access_token']);
+
+            $pageName = FacebookPage::where('id',$event->data['data']['page_id'])->first();
+            
+            $token = (new GetAccessToken)->getPageAccessToken($pageName['page_name']);
+
+            $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$token);
+
+            if(array_key_exists('error',$response->json()) && $response->json()['error']['code'] == 190){
+                $this->errorCatch($event,$pageName);
+            }
+
         } catch (\Exception $e) {
             return $e->getMessage();
         }
+    }
+
+    public function errorCatch($event,$pageName){
+        
+        (new Controller)->refreshPageToken($event->data['data']['page_id']); 
+
+        $token = (new GetAccessToken)->getPageAccessToken($pageName['page_name']);
+
+        $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['postfbid'].'?access_token='.$token);
+
     }
 }

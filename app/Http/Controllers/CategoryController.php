@@ -14,8 +14,8 @@ class CategoryController extends Controller
     public function manageCategory()
     {
         $categories = Category::where('parent_id', '=', 1)
-            ->with('children')
-            ->get();
+                                ->with('children')
+                                ->get();
 
        return fractal($categories,new CategoryTransformer());
     }
@@ -51,8 +51,8 @@ class CategoryController extends Controller
     public function deleteCategory($id)
     {
         $ob = Category::where('id',$id)
-                ->with('children')
-                ->get();
+                        ->with('children')
+                        ->get();
         if(empty($ob[0]->children->toArray()))
         {
             Category::where('id',$id)->delete();

@@ -15,6 +15,9 @@ return [
 
     'default' => env('QUEUE_CONNECTION', 'sync'),
 
+    'tries' => 3,
+
+
     /*
     |--------------------------------------------------------------------------
     | Queue Connections
@@ -40,7 +43,6 @@ return [
             'queue' => 'default',
             'retry_after' => 90,
             'after_commit' => false,
-            'tries' => 3,
         ],
 
         'beanstalkd' => [

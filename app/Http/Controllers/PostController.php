@@ -72,15 +72,14 @@ class PostController extends Controller
                 'message' =>$validate->errors(),
             ],412);
         }
-        $id = auth()->user()->id;
-        if(auth()->user()->role == 'SuperAdmin')
-        {
+
+        if(auth()->user()->role == 'SuperAdmin'){
             $post = Post::where('title','like','%'.$request->title.'%')->get();
         }
         else{
-            $post = Post::where('user_id',$id)
-                    ->where('title','like','%'.$request->title.'%')
-                    ->get(['id','title','desc','image']);
+            $post = Post::where('user_id',auth()->user()->id)
+                        ->where('title','like','%'.$request->title.'%')
+                        ->get(['id','title','desc','image']);
         }
 
         if($post != null)
@@ -103,7 +102,7 @@ public function upload(Request $request){
         'title' => 'required|unique:posts|min:3',
         'desc' => 'required',
         'image' => 'mimes:png,jpg|image|max:2048',
-        'category' => 'required',
+        'category' => 'required|exists:categories,title',
         'pagename' => 'exists:facebook_pages,page_name'
     ]);
     if($validate->fails()){
@@ -114,19 +113,11 @@ public function upload(Request $request){
     $page = FacebookPage::where('page_name',$request->pagename)
             ->where('user_id',auth()->user()->id)
             ->first();
-    if(!$page){
-        return response()->json([
-            'message' => 'Page that you are selected not found'
-        ],404);
-    }
+
     $category = Category::where('title','like','%'.$request->category.'%')->first('id');
-    if (empty($category))
-    {
-        return response()->json([
-            'message' => 'Please Select available Category or create a new Category'
-        ],404);
-    }
+
     $imageName = null;
+
     if($request->hasFile('image'))
     {
         $imageName = time().'.'.$request->image->extension();
@@ -142,9 +133,10 @@ public function upload(Request $request){
     ]);
     event (new FacebookPostEvent([
         'data' => $request->only(['title','desc','category','pagename']),
-        'pagetoken' =>$page->access_token,
-        'imageName' => $imageName
+        'imageName' => $imageName,
+        'post' => $post
     ]));
+    
     return response()->json([
         'message' => 'Post Uploaded Successful',
         'Post' => $post->orderBy('id', 'desc')->first(),
@@ -164,7 +156,8 @@ public function upload(Request $request){
             $post = Post::where('user_id',auth()->user()->id)
                         ->with('comments')
                         ->with('category')
-                        ->get();
+                        ->first();
+            return [$post];
             return fractal($post,new PostTransformer());
         }
         return response()->json([
@@ -179,7 +172,6 @@ public function upload(Request $request){
     public function deletePost($id){
         $data = Post::where('user_id',auth()->user()->id)
                 ->where('id',$id)
-                ->with('pages')
                 ->first();
         if($data)
         {

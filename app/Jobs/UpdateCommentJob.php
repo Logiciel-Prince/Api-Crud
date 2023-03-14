@@ -2,6 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Helpers\GetAccessToken;
+use App\Http\Controllers\Controller;
+use App\Models\FacebookPage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,6 +18,8 @@ class UpdateCommentJob implements ShouldQueue
 
     public $data;
 
+    public $tries;
+
     /**
      * Create a new job instance.
      *
@@ -22,7 +27,7 @@ class UpdateCommentJob implements ShouldQueue
      */
     public function __construct($data)
     {
-
+        $this->tries = config('queue.tries');
         $this->data = $data;
        
     }
@@ -36,9 +41,29 @@ class UpdateCommentJob implements ShouldQueue
     {
         try {
             $event = $this->data;
-            Http::post(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$event->data['pagetoken'].'&message='.$event->data['message']['message']);
+
+            $pageName = FacebookPage::where('id',$event->data['data']['page_id'])->first();
+            
+            $token = (new GetAccessToken)->getPageAccessToken($pageName['page_name']);
+
+            $response = Http::post(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$token.'&message='.$event->data['message']['message']);
+
+            if(array_key_exists('error',$response->json()) && $response->json()['error']['code'] == 190){
+                $this->errorCatch($event,$pageName);
+            }
+            
         } catch (\Exception $e) {
             return $e->getMessage();
         }
+    }
+
+    public function errorCatch($event,$pageName){
+        
+        (new Controller)->refreshPageToken($event->data['data']['page_id']); 
+        
+        $token = (new GetAccessToken)->getPageAccessToken($pageName['page_name']);
+        
+        $response = Http::post(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$token.'&message='.$event->data['message']['message']);
+                            
     }
 }

@@ -11,7 +11,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Models\{
     Comment,
-    FacebookPage,
     Post
 };
 use Illuminate\Support\Facades\{
@@ -23,7 +22,9 @@ class FacebookComment implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    Public $data;
+    public $data;
+
+    public $tries;
 
     /**
      * Create a new job instance.
@@ -32,7 +33,7 @@ class FacebookComment implements ShouldQueue
      */
     public function __construct($data)
     {
-
+        $this->tries = config('queue.tries');
         $this->data = $data;
 
     }
@@ -51,20 +52,11 @@ class FacebookComment implements ShouldQueue
             
             $token = (new GetAccessToken)->getPageAccessToken($event->data['data']['pagename']);
 
-            Log::info($token);
-
             $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' . $event->data['data']['message'] . '&access_token=' . $token);
-
-            Log::info($response);
-            
             if(array_key_exists('error',$response->json()) && $response->json()['error']['code'] == 190){
-
-                (new Controller)->refreshPageToken($postid['page_id']); 
-
-                $token = (new GetAccessToken)->getPageAccessToken($event->data['message']['pagename']);
-
-                $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' .$event->data['data']['message'] . '&access_token=' . $token);
+                $response = $this->errorCatch($postid,$event);
             }
+
             Comment::where('id',$event->data['message']['id'])->update([
                 'commentfbid' => $response->json('id'),
             ]);
@@ -72,6 +64,17 @@ class FacebookComment implements ShouldQueue
         } catch (\Exception $e) {
             return $e->getMessage();
         }
+    }
+
+    public function errorCatch($postid,$event){
+        
+        (new Controller)->refreshPageToken($postid['page_id']); 
+
+        $token = (new GetAccessToken)->getPageAccessToken($event->data['data']['pagename']);
+
+        $response =  Http::post(env('GRAPH_API_URL') . $postid['postfbid'] . '/comments?message=' .$event->data['data']['message'] . '&access_token=' . $token);
+
+        return $response;
     }
 
 }

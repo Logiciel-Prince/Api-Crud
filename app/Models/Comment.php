@@ -12,15 +12,16 @@ class Comment extends Model
 
     protected $fillable = [
         'user_id',
+        'page_id',
         'post_id',
         'message',
     ];
 
-    Public Function user(){
+    public Function user(){
         return $this->belongsTo(User::class);
     }
 
-    Public Function post(){
+    public Function post(){
         return $this->belongsTo(Post::class);
     }
 }

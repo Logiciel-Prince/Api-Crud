@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Helpers\GetAccessToken;
 use App\Http\Controllers\Controller;
 use App\Models\FacebookPage;
-use App\Models\Post;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -17,9 +16,9 @@ class DeleteCommentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $access_token;
-
     public $data;
+
+    public $tries;
 
     /**
      * Create a new job instance.
@@ -28,7 +27,7 @@ class DeleteCommentJob implements ShouldQueue
      */
     public function __construct($data)
     {
-
+        $this->tries = config('queue.tries');
         $this->data = $data;
 
     }
@@ -42,27 +41,29 @@ class DeleteCommentJob implements ShouldQueue
     {
         try {
             $event = $this->data;
-
-            dd($event);
-
-            $token = (new GetAccessToken)->getPageAccessToken($event->data);
+            
+            $pageName = FacebookPage::where('id',$event->data['data']['page_id'])->first();
+            
+            $token = (new GetAccessToken)->getPageAccessToken($pageName['page_name']);
 
             $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$token);
-            
-            $postid = Post::where('id',$event->data['data']['post_id'])->first();
 
             if(array_key_exists('error',$response->json()) && $response->json()['error']['code'] == 190){
-
-                (new Controller)->refreshPageToken($postid['page_id']); 
-
-                $token = (new GetAccessToken)->getPageAccessToken($event->data['message']['pagename']);
-
-                $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$token);
-
+                $this->errorCatch($event,$pageName);
             }
-
+                   
         } catch (\Exception $e) {
             return $e->getMessage();
         }
+    }
+
+    public function errorCatch($event,$pageName){
+       
+        (new Controller)->refreshPageToken($event->data['data']['page_id']); 
+
+        $token = (new GetAccessToken)->getPageAccessToken($pageName['page_name']);
+
+        $response = Http::delete(env('GRAPH_API_URL').$event->data['data']['commentfbid'].'?access_token='.$token);
+
     }
 }
