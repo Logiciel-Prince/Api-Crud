@@ -113,7 +113,33 @@ class FolderController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $validate = Validator::make($request->all(), [
+            'name' => 'required|unique:folders|min:3',
+            'parent_id' => 'required'
+        ]);
+
+        if($validate->fails()){
+            return response()->json([
+                'message' =>$validate->errors(),
+            ],412);
+        }
+        $folder = Folder::where('id',$id)->first();
+        $parent_path = Folder::where('id',$request->parent_id)->first();
+        if($folder)
+        {
+            File::copyDirectory($folder->path,$parent_path->path.$request->name);
+            File::deleteDirectory($folder->path);
+            $folder->update([
+                'name' => $request->name,
+                'path' => $parent_path->path.$request->name.'/'
+            ]);
+            return response()->json([
+                'message' => 'Folder Updated Successful',
+            ],201);
+        }
+        return response()->json([
+            'message' => 'Folder Not Found ',
+        ]);
     }
 
     /**
