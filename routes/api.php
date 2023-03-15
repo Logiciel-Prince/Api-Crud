@@ -6,7 +6,8 @@ use App\Http\Controllers\{
     PostController,
     CategoryController,
     CommentController,
-    Controller
+    Controller,
+    FolderController
 };
 /*
 |--------------------------------------------------------------------------
@@ -115,6 +116,30 @@ Route::group(['middleware'=>['auth:api']],function () {
      //-----------------------------This Route delete the comments on facebook posts---------------------------//
      
      Route::delete('comment/{id}',[CommentController::class,'destroy']);
+
+     Route::group(['name' => 'Folder'], function()  
+     {  
+        //---------------------This Route show the Folders In Hierarchical form--------------------------//
+        
+        Route::get('folder',[FolderController::class,'index']);
+        
+        //---------------------This Route add The new Folders Inside root or other Categories--------------------------//
+        
+        Route::Post('folder',[FolderController::class,'store']);
+        
+        //---------------------This Route delete The selected Folders--------------------------//
+        
+        Route::Delete('folder/{id}',[FolderController::class,'destroy']);
+
+         //---------------------This Route restored The selected Folders--------------------------//
+        
+         Route::get('folder/{id}',[FolderController::class,'restore']);
+        
+        //---------------------This Route update The existing Folders --------------------------//
+        
+        Route::put('folder/{id}',[FolderController::class,'update']);
+     
+     });
 });
 
 
