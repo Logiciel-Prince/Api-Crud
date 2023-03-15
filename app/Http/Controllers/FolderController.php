@@ -21,10 +21,6 @@ class FolderController extends Controller
         $folder = Folder::where('parent_id', 1)->with('children')->get();
 
         return fractal($folder,new FolderTransformer());
-
-        return response()->json([
-            'Folder' => $folder
-        ]);
     }
 
     /**
@@ -65,7 +61,7 @@ class FolderController extends Controller
             if(!$path)
             {
                 $path = collect([
-                    'path' => public_path('storage/images/')
+                    'path' => public_path('/storage/images/')
                 ]);
                 $path = json_decode (json_encode ($path), FALSE);
                 $input['parent_id'] = null;
@@ -117,7 +113,7 @@ class FolderController extends Controller
      */
     public function update(Request $request, $id)
     {
-        
+        //
     }
 
     /**

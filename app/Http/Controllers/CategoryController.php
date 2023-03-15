@@ -35,8 +35,18 @@ class CategoryController extends Controller
                 412
             );
         }
-
+        
         $input['parent_id'] = empty($input['parent_id']) ? 1 : $input['parent_id'];
+
+        $path = Category::where('id',$input['parent_id'])->first();
+        
+        if(!$path){
+            $path = Category::first();
+            if(!$path)
+            {
+                $input['parent_id'] = null;
+            }
+        }
 
         $data = Category::create($input);
         return response()->json([
