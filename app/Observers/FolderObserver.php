@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Folder;
+use Illuminate\Support\Facades\Log;
 
 class FolderObserver
 {
@@ -25,7 +26,11 @@ class FolderObserver
      */
     public function updated(Folder $folder)
     {
-        //
+        $folder->children()->each(function ($childModel) use ($folder) {
+            $childModel->update([
+                'path' => $folder->path.$childModel->name.'/'
+            ]);
+        });
     }
 
     /**
@@ -36,7 +41,9 @@ class FolderObserver
      */
     public function deleted(Folder $folder)
     {
-        $folder->children()->delete();
+         $folder->children()->each(function ($childModel) use ($folder) {
+            $childModel->delete();
+        });
     }
 
     /**

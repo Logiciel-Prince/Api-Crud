@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('folders', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('parent_id')
-                ->constrained('folders')->nullable();
+            $table->unsignedBigInteger('parent_id');
+            $table->foreign('parent_id')->references('id')->on('folders')->nullable();
             $table->string('path');
             $table->softDeletes();
             $table->timestamps();

@@ -115,7 +115,6 @@ class FolderController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'name' => 'required|unique:folders|min:3',
-            'parent_id' => 'required'
         ]);
 
         if($validate->fails()){
@@ -123,8 +122,8 @@ class FolderController extends Controller
                 'message' =>$validate->errors(),
             ],412);
         }
-        $folder = Folder::where('id',$id)->first();
-        $parent_path = Folder::where('id',$request->parent_id)->first();
+        $folder = Folder::where('id',$id)->with('children')->first();
+        $parent_path = Folder::where('id',$folder->parent_id)->first();
         if($folder)
         {
             File::copyDirectory($folder->path,$parent_path->path.$request->name);
