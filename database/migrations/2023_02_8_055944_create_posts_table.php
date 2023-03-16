@@ -21,6 +21,9 @@ return new class extends Migration
             ->constrained('categories');
             $table->foreignId('page_id')
             ->constrained('facebook_pages');
+            $table->foreignId('folder_id')
+            ->constrained('folders');
+            $table->string('postfbid')->nullable();
             $table->string('title');
             $table->string('desc');
             $table->string('image')->nullable();

@@ -17,7 +17,7 @@ class Post extends Model
         'desc',
         'image',
         'category_id',
-        'postfbid',
+        'folder_id',
         'page_id'
     ];
     public function category()
@@ -33,6 +33,11 @@ class Post extends Model
     public function pages()
     {
         return $this->belongsTo(FacebookPage::class,'page_id');
+    }
+
+    public function folder()
+    {
+        return $this->belongsTo(Folder::class);
     }
 
 }

@@ -52,7 +52,6 @@ class Controller extends BaseController
                 ]);
 
             }
-
             $response = $this->extendToken($user);
             
             $newUser = User::updateOrCreate(['email' => $user->email],[
@@ -62,9 +61,10 @@ class Controller extends BaseController
                     'token' => $response->json('access_token'),
                 ]);
             $pageId = null;
-            $this->addPages($newUser,$pageId);
-            
+
             Auth::login($newUser);
+
+            $this->addPages($newUser,$pageId);
 
             return response()->json([
                 'user' => $user
@@ -77,7 +77,6 @@ class Controller extends BaseController
     }
 
     public function addPages($newUser){
-
         $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
         
         foreach($request['data'] as $d)

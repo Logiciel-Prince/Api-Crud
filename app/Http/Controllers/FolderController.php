@@ -123,9 +123,9 @@ class FolderController extends Controller
             ],412);
         }
         $folder = Folder::where('id',$id)->with('children')->first();
-        $parent_path = Folder::where('id',$folder->parent_id)->first();
         if($folder)
         {
+            $parent_path = Folder::where('id',$folder->parent_id)->first();
             File::copyDirectory($folder->path,$parent_path->path.$request->name);
             File::deleteDirectory($folder->path);
             $folder->update([

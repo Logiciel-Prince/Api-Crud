@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Helpers\GetAccessToken;
 use App\Http\Controllers\Controller;
+use App\Models\Folder;
 use App\Models\Post;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,6 +12,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FacebookPost implements ShouldQueue
 {
@@ -42,11 +44,13 @@ class FacebookPost implements ShouldQueue
             $event = $this->data;
 
             $token = (new GetAccessToken)->getPageAccessToken($event->data['data']['pagename']);
-
+            
             if ($event->data['imageName']) {
                 $imageName = $event->data['imageName'];
 
-                $image = public_path('storage/images/' . $imageName);
+                $path = Folder::where('id',$event->data['post']['folder_id'])->first();
+
+                $image = $path->path . $imageName;
 
                 $response = Http::attach('attachment', file_get_contents($image), $imageName)
                     ->post(env('GRAPH_API_URL') . 'me/photos?access_token=' . $token . '&message=' . $event->data['data']['desc']);
@@ -55,8 +59,8 @@ class FacebookPost implements ShouldQueue
                     $response = $this->errorCatchImage($response, $event, $image, $imageName);
                 }
 
-                $this->storeFbPostId($event, $response->json('post_id'));
-
+                $postId = $event->data['post']['id'];
+                $this->storeFbPostId($postId, $response->json('post_id'));
                 return true;
             }
 
@@ -65,11 +69,12 @@ class FacebookPost implements ShouldQueue
             if (array_key_exists('error', $response->json()) && $response->json()['error']['code'] == 190) {
                 $this->errorCatchPost($response, $event);
             }
-
+            $postId = $event->data['post']['id'];
             $this->storeFbPostId($event, $response->json('id'));
 
             return true;
         } catch (\Exception $e) {
+
             return $e->getMessage();
         }
     }
@@ -97,9 +102,9 @@ class FacebookPost implements ShouldQueue
         return $response;
     }
 
-    private function storeFbPostId($event, $id)
+    private function storeFbPostId($postId, $id)
     {
-        Post::where('id', $event->data['post']['id'])
+        Post::where('id',$postId)
             ->update(['postfbid' => $id]);
     }
 }

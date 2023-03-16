@@ -57,7 +57,7 @@ Route::group(['middleware'=>['auth:api']],function () {
         
         //---------------------This Route add The new Categories Inside root or other Categories--------------------------//
         
-        Route::Post('category',[CategoryController::class,'addCategory']);
+        Route::post('category',[CategoryController::class,'addCategory']);
         
         //---------------------This Route delete The selected Category--------------------------//
         

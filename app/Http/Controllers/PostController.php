@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\{
     Post,
     Category,
-    FacebookPage
+    FacebookPage,
+    Folder
 };
 use App\Events\{
     FacebookDeletePostEvent,
@@ -103,6 +104,7 @@ public function upload(Request $request){
         'desc' => 'required',
         'image' => 'mimes:png,jpg|image|max:2048',
         'category' => 'required|exists:categories,title',
+        'folder' => 'required|exists:folders,name',
         'pagename' => 'exists:facebook_pages,page_name'
     ]);
     if($validate->fails()){
@@ -115,13 +117,16 @@ public function upload(Request $request){
             ->first();
 
     $category = Category::where('title','like','%'.$request->category.'%')->first('id');
-
+    
     $imageName = null;
-
+    
     if($request->hasFile('image'))
     {
+        $folder = Folder::where('name','like','%'.$request->folder.'%')->first();
+
         $imageName = time().'.'.$request->image->extension();
-        $request->image->storeAs('public/images/', $imageName);
+        
+        $request->image->move($folder->path, $imageName);
     }
     $post = Post::create([
         'user_id' => auth()->user()->id,
@@ -130,6 +135,7 @@ public function upload(Request $request){
         'desc' => $request->desc,
         'image' => $imageName,
         'category_id' => $category->id,
+        'folder_id' => $folder->id,
     ]);
     event (new FacebookPostEvent([
         'data' => $request->only(['title','desc','category','pagename']),
@@ -172,12 +178,13 @@ public function upload(Request $request){
     public function deletePost($id){
         $data = Post::where('user_id',auth()->user()->id)
                 ->where('id',$id)
+                ->with('folder')
                 ->first();
         if($data)
         {
             if($data->image != null)
             {
-                unlink(public_path('storage/images/'.$data->image));
+                unlink($data->folder->path.$data->image);
             }
             event(new FacebookDeletePostEvent([
                 'data'=>$data
