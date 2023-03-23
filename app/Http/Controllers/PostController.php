@@ -112,7 +112,9 @@ public function upload(Request $request){
             'message' =>$validate->errors(),
         ],412);
     }
-    $page = FacebookPage::where('page_name',$request->pagename)
+    $pageName = empty($request->pagename) ? 'Api test' : $request->pagename;
+
+    $page = FacebookPage::where('page_name',$pageName)
             ->where('user_id',auth()->user()->id)
             ->first();
 
@@ -162,8 +164,7 @@ public function upload(Request $request){
             $post = Post::where('user_id',auth()->user()->id)
                         ->with('comments')
                         ->with('category')
-                        ->first();
-            return [$post];
+                        ->get();
             return fractal($post,new PostTransformer());
         }
         return response()->json([

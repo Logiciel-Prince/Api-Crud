@@ -113,32 +113,32 @@ class Controller extends BaseController
     public function faceBookPost(Request $request){  
         $data = Post::where('postfbid',$request->id)->first();
         Log::info($request);
-        if(empty($data))
-        {
-            $imageName = null;
-            if(array_key_exists('full_picture',$request->toArray()))
-            {
-                $url = $request->full_picture;
-                $rep = file_get_contents($url);
-                $extension = explode('?',$url);
-                $ext = explode('.',$extension[0]);
-                $imageName = time().'.'.$ext[5];
-                $new = 'storage/images/'.$imageName;
-                $upload =file_put_contents($new, $rep);
-                if(!array_key_exists('description',$request->toArray())){
-                    $request['description'] = 'No Description';
-                }
-                Post::create([
-                    'user_id' => auth()->user()->id,
-                    'category_id' => 17,
-                    'postfbid' => $request->id,
-                    'title' => 'facebook',
-                    'desc' => $request->description,
-                    'image' => $imageName
-                ]);
-            }
-        }
-        // return $request;
+        // if(empty($data))
+        // {
+        //     $imageName = null;
+        //     if(array_key_exists('full_picture',$request->toArray()))
+        //     {
+        //         $url = $request->full_picture;
+        //         $rep = file_get_contents($url);
+        //         $extension = explode('?',$url);
+        //         $ext = explode('.',$extension[0]);
+        //         $imageName = time().'.'.$ext[5];
+        //         $new = 'storage/images/'.$imageName;
+        //         $upload =file_put_contents($new, $rep);
+        //         if(!array_key_exists('description',$request->toArray())){
+        //             $request['description'] = 'No Description';
+        //         }
+        //         Post::create([
+        //             'user_id' => auth()->user()->id,
+        //             'category_id' => 17,
+        //             'postfbid' => $request->id,
+        //             'title' => 'facebook',
+        //             'desc' => $request->description,
+        //             'image' => $imageName
+        //         ]);
+        //     }
+        // }
+        return $request;
 
     }
 

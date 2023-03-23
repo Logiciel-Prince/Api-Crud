@@ -28,7 +28,7 @@ class FolderObserver
     {
         $folder->children()->each(function ($childModel) use ($folder) {
             $childModel->update([
-                'path' => $folder->path.$childModel->name.'/'
+                'path' => $folder->path . $childModel->name . '/'
             ]);
         });
     }
@@ -41,7 +41,7 @@ class FolderObserver
      */
     public function deleted(Folder $folder)
     {
-         $folder->children()->each(function ($childModel) use ($folder) {
+        $folder->children()->each(function ($childModel) use ($folder) {
             $childModel->delete();
         });
     }

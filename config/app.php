@@ -182,6 +182,8 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
         Yajra\DataTables\DataTablesServiceProvider::class,
+        Miladimos\FileManager\Providers\FileManagerServiceProvider::class,
+
 
         /*
          * Package Service Providers...
@@ -211,16 +213,17 @@ return [
     |
     */
 
-    'aliases' => [
-        // 'ExampleClass' => App\Example\ExampleClass::class,
-        'Socialite' => Laravel\Socialite\Facades\Socialite::class,
-        'DataTables' => Yajra\DataTables\Facades\DataTables::class,
-        'Route'     => "Illuminate\Support\Facades\Route",
-    ],
-
-    // 'aliases' => Facade::defaultAliases()->merge([
+    // 'aliases' => [
     //     // 'ExampleClass' => App\Example\ExampleClass::class,
     //     'Socialite' => Laravel\Socialite\Facades\Socialite::class,
-    // ])->toArray(),
+    //     'DataTables' => Yajra\DataTables\Facades\DataTables::class,
+    //     'Route'     => "Illuminate\Support\Facades\Route",
+    // ],
+
+    'aliases' => Facade::defaultAliases()->merge([
+        // 'ExampleClass' => App\Example\ExampleClass::class,
+        'Socialite' => Laravel\Socialite\Facades\Socialite::class,
+        Miladimos\FileManager\Facades\FileManagerFacade::class,
+    ])->toArray(),
 
 ];
