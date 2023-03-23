@@ -8,6 +8,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Modules\Directory\Entities\Directory;
 use Modules\Directory\Services\DirectoryService;
 use Modules\Directory\Traits\ApiResponder;
@@ -41,21 +42,19 @@ class DirectoryController extends Controller
         return $this->responseError("Error in Directory create", 500);
     }
 
-    public function deleteDirectories(Request $request)
+    public function deleteDirectories($id)
     {
-        if (is_array($request->get('directories'))) {
-            foreach ($request->get('directories', []) as $key => $directory) {
-                if (!$this->directoryService->deleteDirectory($directory)) {
-                    return $this->responseError("Error in Directory Delete", 500);
-                }
-            }
+        $direct = Directory::where('id',$id)->first();
+        if($direct){
+            $disk = Storage::disk(config('filemanager.disk'));
+            $disk->deleteDirectory($direct->path);
+            $direct->delete();
+            return $this->responseSuccess("Directories Deleted");
         }
-        
-        if (!$this->directoryService->deleteDirectory($request->get('directories'))) {
-            return $this->responseError("Error in Directory Delete", 500);
-        }
+        return response()->json([
+            'message' => 'Directory Delete not Successful'
+        ]);
 
-        return $this->responseSuccess("Directories Deleted");
     }
 
     public function renameDirectory(Directory $directory, Request $request)
@@ -81,11 +80,6 @@ class DirectoryController extends Controller
         }
 
         return $folders->toJson();
-    }
-
-    public function getParentDirectory(Directory $directory)
-    {
-        return $directory->parent();
     }
 
     public function allDirectory(){

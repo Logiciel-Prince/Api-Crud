@@ -21,9 +21,8 @@ Route::middleware('auth:api')->get('/directory', function (Request $request) {
 
 Route::group(['as' => 'directories.'], function () {
    Route::get('directories', [DirectoryController::class, 'allDirectory'])->name('index');
-    Route::post('/directories/{directory}/parent', [DirectoryController::class, 'getParentDirectory'])->name('parent');
 
     Route::post('directories', [DirectoryController::class, 'createDirectory'])->name('create');
-    Route::delete('directories/{directory}', [DirectoryController::class, 'deleteDirectories'])->name('delete');
+    Route::delete('directories/{id}', [DirectoryController::class, 'deleteDirectories'])->name('delete');
     Route::post('directories/{directory}/rename', [DirectoryController::class, 'renameDirectory'])->name('rename');
 });

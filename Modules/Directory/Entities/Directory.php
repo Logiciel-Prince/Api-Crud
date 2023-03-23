@@ -12,7 +12,7 @@ class Directory extends Model
         RouteKeyNameUUID;
 
     // protected $table = 'filemanager_directories';
-    protected $table = 'folders';
+    protected $table = 'filemanager_directories';
 
     // protected $fillable = ['name', 'uuid'];
 
