@@ -140,7 +140,7 @@ public function upload(Request $request){
         'folder_id' => $folder->id,
     ]);
     event (new FacebookPostEvent([
-        'data' => $request->only(['title','desc','category','pagename']),
+        'data' => $request->only(['title','desc','category','pagename'],$page->page_name),
         'imageName' => $imageName,
         'post' => $post
     ]));

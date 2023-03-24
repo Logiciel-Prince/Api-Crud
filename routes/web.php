@@ -27,7 +27,7 @@ Route::get('fb', function () {
 
 Route::get('loginfb',[Controller::class,'login_to_facebook']);
 
-Route::get('auth/facebook',[Controller::class,'redirectToFacebook'])->name('auth.facebook');
+Route::get('login/facebook',[Controller::class,'redirectToFacebook'])->name('auth.facebook');
 
 Route::get('auth/facebook/callback',[Controller::class, 'handleFacebookCallback']);
 

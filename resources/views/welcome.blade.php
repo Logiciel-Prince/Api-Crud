@@ -28,7 +28,8 @@
                         <a href="{{ url('/home') }}" class="text-sm text-gray-700 dark:text-gray-500 underline">Home</a>
                     @else
                         {{-- <a href="{{ route('auth.facebook') }}" class="text-sm text-gray-700 dark:text-gray-500 underline">Log in to facebook</a> --}}
-                        <a href="http://localhost/Prince/OJT/Api%20Crud/public/auth/facebook?scope=public_profile,email,user_birthday,user_friends,user_posts,user_likes,pages_manage_posts,user_photos,publish_videos,pages_manage_cta,pages_shows_list,pages_messaging,publish_to_groups,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement" class="text-sm text-gray-700 dark:text-gray-500 underline">Log in to facebook</a>
+                        <a href="http://localhost/Prince/OJT/Api-Crud/public/login/facebook?scope=public_profile,email,user_birthday,user_friends,user_posts,user_likes,pages_manage_posts,user_photos,publish_videos,pages_manage_cta,pages_shows_list,pages_messaging,publish_to_groups,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement" class="text-sm text-gray-700 dark:text-gray-500 underline">Log in to facebook</a>
+                        
 
                         @if (Route::has('register'))
                             <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 dark:text-gray-500 underline">Register</a>

@@ -25,7 +25,7 @@ Route::group(['middleware'=>['auth:api']],function () {
 
     Route::group(['middleware' => ['user-access:Admin,SuperAdmin']],function () {
         //* <-----------------------This Route get all the User Information That create account ------------------------------>
-        Route::Get('Getuser',[UserController::class,'index']);
+        Route::Get('getuser',[UserController::class,'index']);
     
         //* <-----------------------This Route Create New User ------------------------------>
     
