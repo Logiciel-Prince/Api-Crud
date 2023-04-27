@@ -65,7 +65,7 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
-## Instructions to start
+# Instructions to start
 
 ### Requirements
 - Laravel version : 9.53 or any Laravel 9 Version
