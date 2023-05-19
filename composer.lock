@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e32d596f3a25591a9cd5be798ec3e0be",
+    "content-hash": "a59e6e9964330b7464ea050d23449ebb",
     "packages": [
         {
             "name": "beberlei/assert",
@@ -5871,6 +5871,58 @@
                 }
             ],
             "time": "2021-07-11T12:37:55+00:00"
+        },
+        {
+            "name": "recurly/recurly-client",
+            "version": "4.30.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/recurly/recurly-client-php.git",
+                "reference": "bc8e4a87074f3cc164ab9951d8632d8826ebd824"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/recurly/recurly-client-php/zipball/bc8e4a87074f3cc164ab9951d8632d8826ebd824",
+                "reference": "bc8e4a87074f3cc164ab9951d8632d8826ebd824",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">= 7.2.0",
+                "psr/log": "^1.1 || ^2.0 || ^3.0"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
+                "phpcompatibility/php-compatibility": "^9.3",
+                "phpdocumentor/phpdocumentor": "~3.0.0",
+                "phpstan/phpstan": "^0.12.11",
+                "phpunit/phpunit": "^8",
+                "squizlabs/php_codesniffer": "^3.5"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "lib/recurly.php"
+                ],
+                "classmap": [
+                    "lib"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "The PHP client library for the Recurly API",
+            "homepage": "https://github.com/recurly/recurly-client-php",
+            "keywords": [
+                "pay",
+                "payments",
+                "recurly"
+            ],
+            "support": {
+                "issues": "https://github.com/recurly/recurly-client-php/issues",
+                "source": "https://github.com/recurly/recurly-client-php/tree/4.30.0"
+            },
+            "time": "2023-03-29T20:27:32+00:00"
         },
         {
             "name": "ringcentral/psr7",

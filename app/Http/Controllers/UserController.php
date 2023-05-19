@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Laravel\Passport\Passport;
 use Illuminate\Support\Facades\{
-    Hash,
     Auth,
+    Hash,
     Validator
 };
 

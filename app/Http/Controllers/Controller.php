@@ -2,31 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FacebookPage;
+use App\Models\Post;
+use App\Models\User;
+use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Routing\Controller as BaseController;
-use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
-use Exception;
-use App\Models\{
-    FacebookPage,
-    User,
-    Post
-};
-use Illuminate\Support\Facades\{
-    Http,
-    Hash,
-    Auth,
-    Log,
-};
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Facades\Socialite;
 
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-
-    public function login_to_facebook(){
+    public function login_to_facebook()
+    {
         return Http::get('http://localhost/Prince/OJT/Api%20Crud/public/auth/facebook?scope=public_profile,email,user_birthday,user_friends,user_posts,user_likes,pages_manage_posts,user_photos,publish_videos,pages_manage_cta,pages_shows_list,pages_messaging,publish_to_groups,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement');
     }
 
@@ -38,80 +34,78 @@ class Controller extends BaseController
     public function handleFacebookCallback()
     {
         try {
-
             $user = Socialite::driver('facebook')->user();
-            
+
             $finduser = User::where('facebook_id', $user->id)->first();
 
-            if($finduser){
-
+            if ($finduser) {
                 Auth::login($finduser);
 
                 return response()->json([
-                    'user' => $user
+                    'user' => $user,
                 ]);
-
             }
             $response = $this->extendToken($user);
-            
-            $newUser = User::updateOrCreate(['email' => $user->email],[
-                    'name' => $user->name,
-                    'facebook_id'=> $user->id,
-                    'password' => Hash::make('123456'),
-                    'token' => $response->json('access_token'),
-                ]);
+
+            $newUser = User::updateOrCreate(['email' => $user->email], [
+                'name' => $user->name,
+                'facebook_id' => $user->id,
+                'password' => Hash::make('123456'),
+                'token' => $response->json('access_token'),
+            ]);
             $pageId = null;
 
             Auth::login($newUser);
 
-            $this->addPages($newUser,$pageId);
+            $this->addPages($newUser, $pageId);
 
             return response()->json([
-                'user' => $user
+                'user' => $user,
             ]);
-
-
         } catch (Exception $e) {
             dd($e->getMessage());
         }
     }
 
-    public function addPages($newUser){
+    public function addPages($newUser)
+    {
         $request = Http::get(env('GRAPH_API_URL').'me/accounts?access_token='.auth()->user()->token);
-        
-        foreach($request['data'] as $d)
-        {
-            $data = FacebookPage::updateOrCreate(['page_id' => $d['id']],[
+
+        foreach ($request['data'] as $d) {
+            $data = FacebookPage::updateOrCreate(['page_id' => $d['id']], [
                 'user_id' => $newUser->id,
                 'page_id' => $d['id'],
                 'page_name' => $d['name'],
-                'access_token' => $d['access_token']
+                'access_token' => $d['access_token'],
             ]);
         }
 
         return $data;
-
     }
 
-    public function refreshPageToken($pageId){
-        $page = FacebookPage::where('id',$pageId)->with('user')->first();
+    public function refreshPageToken($pageId)
+    {
+        $page = FacebookPage::where('id', $pageId)->with('user')->first();
 
-            $d = Http::get(env('GRAPH_API_URL').$page['page_id'].'?fields=id,name,access_token&access_token='.$page->user['token']);
+        $d = Http::get(env('GRAPH_API_URL').$page['page_id'].'?fields=id,name,access_token&access_token='.$page->user['token']);
 
-            $data = FacebookPage::updateOrCreate(['page_id' => $d['id']],[
-                'access_token' => $d['access_token']
-            ]);
+        $data = FacebookPage::updateOrCreate(['page_id' => $d['id']], [
+            'access_token' => $d['access_token'],
+        ]);
 
-            return $data;
+        return $data;
     }
 
-    public function extendToken($user){
+    public function extendToken($user)
+    {
         $response = Http::get(env('GRAPH_API_URL').'oauth/access_token?grant_type=fb_exchange_token&client_id='.env('FACEBOOK_CLIENT_ID').'&client_secret='.env('FACEBOOK_CLIENT_SECRET').'&fb_exchange_token='.$user->token);
+
         return $response;
     }
 
-    public function faceBookPost(Request $request){  
-        $data = Post::where('postfbid',$request->id)->first();
+    public function faceBookPost(Request $request)
+    {
+        $data = Post::where('postfbid', $request->id)->first();
         Log::info($request);
         // if(empty($data))
         // {
@@ -139,7 +133,5 @@ class Controller extends BaseController
         //     }
         // }
         return $request;
-
     }
-
 }
